@@ -144,7 +144,7 @@ def main():
         run("git", "commit", "-m", f"Release v{ver}\n\n{notes}")
     run("git", "push")
     run(gh(), "release", "create", f"v{ver}", zpath, zpath + ".sha256",
-        "--title", f"{NAME} v{ver}", "--notes", notes)
+        "--title", f"{NAME} - by ChanaMasala v{ver}", "--notes", notes)
     print(f"\nPublished v{ver}.")
 
 

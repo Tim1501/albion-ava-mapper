@@ -2,7 +2,7 @@
   <img src="app/static/icon.png" width="96" alt="Albion Ava Mapper icon">
 </p>
 
-<h1 align="center">Albion Ava Mapper</h1>
+<h1 align="center">Albion Ava Mapper - by ChanaMasala</h1>
 
 <p align="center">Roads of Avalon zone finder and portal overlay for <b>Albion Online</b> on PC</p>
 
