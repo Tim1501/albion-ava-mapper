@@ -231,6 +231,7 @@ OVERLAY = {"seq": 0, "id": None, "score": 0, "text": "", "lines": [], "at": None
            "closesAt": None}
 HOTKEY_STATUS = {"read": {"ok": None, "hotkey": None}, "move": {"ok": None, "hotkey": None}}
 _overlay_window = None
+STALE_COPY = {"on": False}  # True when another copy held our port at start (it may also hold the hotkeys)
 LAST_CAPTURE = {"jpg": None}
 _hotkey = None
 _matcher = None
@@ -350,13 +351,15 @@ def show_overlay(visible):
     save_settings({"overlay": {"visible": bool(visible)}})
     if _overlay_window is None:
         return False
+    # Plain Win32 calls, never pywebview's show()/hide()/on_top from this thread: those wait for the
+    # overlay's UI thread while holding Python's lock, and froze the whole app (server, tray, overlay)
+    # whenever the UI thread was running one of our event handlers at the same moment.
     try:
         if visible:
-            _overlay_window.show()
-            _overlay_window.on_top = True
             style_overlay()
+            capture.show_window(OVERLAY_TITLE, True)
         else:
-            _overlay_window.hide()
+            capture.show_window(OVERLAY_TITLE, False)
     except Exception as e:  # noqa: BLE001
         log(f"Overlay show/hide failed: {e}")
     refresh_tray()
@@ -365,7 +368,8 @@ def show_overlay(visible):
 
 def api_overlay_state(req):
     return {**OVERLAY, "hotkeys": HOTKEY_STATUS, "overlay": _overlay_window is not None,
-            "locked": load_settings()["overlay"].get("locked", True), "size": overlay_size()}
+            "locked": load_settings()["overlay"].get("locked", True), "size": overlay_size(),
+            "staleCopy": STALE_COPY["on"]}
 
 
 def set_overlay_size(size):
@@ -887,6 +891,7 @@ def main():
             break
         except OSError:
             log(f"Port {port} is busy, trying the next one")
+            STALE_COPY["on"] = True
     if server is None:
         log("No free port found")
         return

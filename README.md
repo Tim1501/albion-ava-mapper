@@ -84,6 +84,16 @@ The **⤓** button minimizes it to the tray (the "show hidden icons" area by the
 screenshot, and keeps that image in memory only. It never touches the game's memory, network
 traffic or input.
 
+## Troubleshooting
+
+- **F8 / F9 do nothing.** The app shows an orange warning when it can't use a key. Usually an
+  older copy of the app is still running (quit it from its tray icon, or end it in Task Manager),
+  or another program uses the same key (pick a different one on the Overlay page). If it still
+  doesn't work, right-click **Albion Ava Mapper.exe** and choose **Run as administrator**.
+- **F8 finds no zone.** The game must be in English, and the portal's tooltip must be showing
+  next to the mouse. The Overlay page's **What it read** shows what the app saw.
+- **The overlay is somewhere odd.** Use **Reset position** on the Overlay page or in the tray menu.
+
 ## Where the numbers come from
 
 | What | Game file |

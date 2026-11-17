@@ -322,7 +322,7 @@ def window_rect(title):
 def move_window(title, x, y):
     hwnd = user32.FindWindowW(None, title)
     if hwnd:
-        user32.SetWindowPos(hwnd, None, int(x), int(y), 0, 0, 0x0001 | 0x0004 | 0x0010)  # NOSIZE|NOZORDER|NOACTIVATE
+        user32.SetWindowPos(hwnd, None, int(x), int(y), 0, 0, 0x0001 | 0x0004 | 0x0010 | 0x4000)  # NOSIZE|NOZORDER|NOACTIVATE|ASYNC
     return bool(hwnd)
 
 
@@ -363,11 +363,24 @@ def set_click_through(title, on, alpha=255):
     return True
 
 
+def show_window(title, visible):
+    """Show (on top, without taking focus) or hide a window. Async: never waits for the window's thread."""
+    hwnd = user32.FindWindowW(None, title)
+    if not hwnd:
+        return False
+    if visible:
+        user32.ShowWindowAsync(hwnd, 4)  # SW_SHOWNOACTIVATE
+        user32.SetWindowPos(hwnd, ctypes.c_void_p(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x4000)  # TOPMOST, async
+    else:
+        user32.ShowWindowAsync(hwnd, 0)  # SW_HIDE
+    return True
+
+
 def fix_window_size(title, width, height):
     """Give a frameless window its exact size (pywebview subtracts a title bar it doesn't have)."""
     hwnd = user32.FindWindowW(None, title)
     if hwnd:
-        user32.SetWindowPos(hwnd, None, 0, 0, int(width), int(height), 0x0002 | 0x0004 | 0x0010)  # NOMOVE|NOZORDER|NOACTIVATE
+        user32.SetWindowPos(hwnd, None, 0, 0, int(width), int(height), 0x0002 | 0x0004 | 0x0010 | 0x4000)  # NOMOVE|NOZORDER|NOACTIVATE|ASYNC
     return bool(hwnd)
 
 

@@ -281,7 +281,22 @@ function showVersion(meta) {
   if (u) b.textContent = `Update to v${u.version}`;
 }
 
+async function checkHotkeys() {
+  let st;
+  try { st = await api("GET", "/api/overlay/state"); } catch { return; }
+  const bad = Object.values(st.hotkeys || {}).filter((h) => h.ok === false).map((h) => h.hotkey);
+  $("#hkWarn").hidden = !bad.length;
+  if (!bad.length) return;
+  $("#hkWarnTitle").textContent = `${bad.join(" and ")} ${bad.length > 1 ? "aren't" : "isn't"} working right now`;
+  $("#hkWarnText").textContent = (st.staleCopy
+    ? "An older copy of Albion Ava Mapper still seems to be running and holding the keys. Quit it from its tray icon (or end \"Albion Ava Mapper\" / \"pythonw\" in Task Manager), then start the app again. "
+    : "Another program is using the key. Close it, or pick a different key on the Overlay page. ")
+    + "If it still doesn't work, right-click Albion Ava Mapper and choose Run as administrator. The app keeps retrying every few seconds.";
+}
+setInterval(checkHotkeys, 5000);
+
 async function boot() {
+  checkHotkeys();
   const meta = await api("GET", "/api/meta");
   showVersion(meta);
   setTimeout(() => api("GET", "/api/meta").then(showVersion).catch(() => {}), 12000);  // the update check runs in the background
