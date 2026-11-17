@@ -41,6 +41,23 @@ APP_VERSION = "1.0.0"
 DONATE_URL = "https://www.paypal.com/paypalme/DeepTak646"
 DISCORD_NAME = "ChanaMasala"
 REPO_URL = "https://github.com/Tim1501/albion-ava-mapper"
+# The supporters list lives in the repository, so it can be updated without a new release.
+DONORS_URL = "https://raw.githubusercontent.com/Tim1501/albion-ava-mapper/main/donors.json"
+
+# Newest first. Shown on the Overview page under "What's new"; app/release.py uses the entry
+# of the version it publishes as the GitHub release notes.
+CHANGELOG = [
+    ("1.0.0", "2026-11-17", [
+        "First public release",
+        "All 400 Roads of Avalon zones: chests (green, blue, gold, small and big), gathering spots, "
+        "dungeons and where each zone connects, straight from Albion's game files",
+        "F8 reads the portal tooltip under the mouse and shows the zone and its closing time (in UTC, like the game)",
+        "Overlay in three sizes: Big for the black bars around a 21:9 game, Medium and Small for normal screens",
+        "The overlay is click-through, stays off the taskbar and shows up in your screenshots",
+        "Overview page with the best zones, Supporters page, and a one-click bug report",
+        "Start menu and desktop shortcuts are made on the first start; everything stays in one folder",
+    ]),
+]
 PORT = int(os.environ.get("AVA_PORT", "8773"))
 HOST = "127.0.0.1"
 RENDER = "https://render.albiononline.com/v1"
@@ -176,6 +193,152 @@ def api_open_release(req):
     return {"ok": True}
 
 
+def api_changelog(req):
+    return [{"version": v, "date": d, "items": items} for v, d, items in CHANGELOG]
+
+
+# --- supporters ------------------------------------------------------------------
+DONORS_FILE = os.path.join(DATA_DIR, "donors.json")  # last list downloaded, for offline use
+
+
+def api_donors(req):
+    """donors.json from the repository (cached in data/donors.json for offline use)."""
+    online = True
+    try:
+        req_ = urllib.request.Request(DONORS_URL, headers={"User-Agent": "AlbionAvaMapper/" + APP_VERSION})
+        with urllib.request.urlopen(req_, timeout=6) as r:
+            data = json.loads(r.read())
+        write_json(DONORS_FILE, data)
+    except Exception as e:  # noqa: BLE001
+        online = False
+        log(f"Supporters list not downloaded: {e}")
+        data = read_json(DONORS_FILE) or {"currency": "$", "donors": []}
+    donors = []
+    for d in data.get("donors") or []:
+        try:
+            donors.append({"name": str(d.get("name") or "Anonymous")[:40], "amount": float(d.get("amount") or 0),
+                           "message": str(d.get("message") or "")[:300]})
+        except (TypeError, ValueError):
+            continue
+    donors.sort(key=lambda d: -d["amount"])
+    return {"currency": data.get("currency", "$"), "updated": data.get("updated"), "donors": donors, "online": online}
+
+
+# --- bug report ----------------------------------------------------------------------
+def desktop_dir():
+    """The real Desktop folder (also when OneDrive moved it), or None."""
+    try:
+        import ctypes
+        buf = ctypes.create_unicode_buffer(260)
+        if ctypes.windll.shell32.SHGetFolderPathW(None, 0x10, None, 0, buf) == 0 and os.path.isdir(buf.value):
+            return buf.value  # CSIDL_DESKTOPDIRECTORY
+    except Exception:  # noqa: BLE001
+        pass
+    return None
+
+
+def system_info():
+    import platform
+    sw, sh = capture.primary_screen()
+    st = load_settings()
+    lines = [
+        f"{APP_NAME} v{APP_VERSION}",
+        f"Made: {datetime.datetime.now():%Y-%m-%d %H:%M:%S} local, {datetime.datetime.now(datetime.timezone.utc):%H:%M} UTC",
+        f"Windows: {platform.platform()}",
+        f"Running as: {'release exe' if getattr(sys, 'frozen', False) else 'Python ' + platform.python_version()}",
+        f"Screen: {sw}x{sh}",
+        f"Overlay: {'available' if _overlay_window is not None else 'NOT available'}, size {overlay_size()}, "
+        f"visible {st['overlay'].get('visible')}, locked {st['overlay'].get('locked')}, "
+        f"at {capture.window_rect(OVERLAY_TITLE) if _overlay_window is not None else '-'}",
+        f"Hotkeys: {json.dumps(HOTKEY_STATUS)}",
+        f"Older copy holding the port at start: {STALE_COPY['on']}",
+        f"Read area: {st['region']}",
+        f"Tray: {'yes' if _tray is not None else 'no'}",
+        f"Zone data: {json.dumps(read_json(os.path.join(GAME_DIR, 'meta.json')))}",
+        "",
+        "Last read:",
+        f"  zone {OVERLAY.get('id')}  score {OVERLAY.get('score')}  error {OVERLAY.get('error')}  at {OVERLAY.get('at')}",
+        "  text lines:",
+        *[f"    {t}" for t in OVERLAY.get("lines") or []],
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def api_bug_report(req):
+    """One zip with the log, settings, system info, what happened and (optionally) the last read image."""
+    import zipfile
+    what = str(req.body.get("what") or "").strip()[:5000]
+    with_image = bool(req.body.get("image", True))
+    name = f"Albion Ava Mapper bug report {datetime.datetime.now():%Y-%m-%d %H%M}.zip"
+    folder = desktop_dir() or DATA_DIR
+    path = os.path.join(folder, name)
+    try:
+        with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("what happened.txt", what or "(nothing written)")
+            z.writestr("system info.txt", system_info())
+            z.writestr("settings.json", json.dumps(load_settings(), indent=1))
+            logf = os.path.join(LOG_DIR, "app.log")
+            if os.path.exists(logf):
+                with open(logf, encoding="utf-8", errors="replace") as f:
+                    z.writestr("app.log", "".join(f.readlines()[-3000:]))
+            if with_image and LAST_CAPTURE["jpg"]:
+                z.writestr("last read.jpg", LAST_CAPTURE["jpg"])  # straight from memory into the zip
+    except Exception as e:  # noqa: BLE001
+        log(traceback.format_exc())
+        raise ApiError(f"Couldn't save the bug report: {e}") from None
+    log(f"Bug report saved: {path}")
+    try:
+        subprocess.Popen(["explorer", "/select,", path])
+    except OSError:
+        pass
+    return {"ok": True, "path": path, "name": name, "onDesktop": folder != DATA_DIR,
+            "image": with_image and bool(LAST_CAPTURE["jpg"])}
+
+
+# --- shortcuts (release build) ------------------------------------------------------
+def make_shortcuts(desktop=True):
+    """Start menu shortcut (and a desktop one) for the release exe. PowerShell + WScript.Shell, no window."""
+    if not getattr(sys, "frozen", False):
+        return {"ok": False, "why": "Shortcuts are only made for the downloaded app (the .exe)."}
+    exe = os.path.abspath(sys.executable)
+    places = [os.path.join(os.environ.get("APPDATA", ""), r"Microsoft\Windows\Start Menu\Programs")]
+    if desktop and desktop_dir():
+        places.append(desktop_dir())
+    made = []
+    for folder in places:
+        if not os.path.isdir(folder):
+            continue
+        lnk = os.path.join(folder, APP_NAME + ".lnk")
+        ps = ("$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:AVA_LNK);"
+              "$s.TargetPath=$env:AVA_EXE;$s.WorkingDirectory=$env:AVA_DIR;$s.IconLocation=$env:AVA_EXE+',0';"
+              "$s.Description='Roads of Avalon zone finder';$s.Save()")
+        env = {**os.environ, "AVA_LNK": lnk, "AVA_EXE": exe, "AVA_DIR": os.path.dirname(exe)}
+        try:
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps], env=env,
+                           timeout=20, creationflags=0x08000000, check=True)  # CREATE_NO_WINDOW
+            made.append(lnk)
+        except Exception as e:  # noqa: BLE001
+            log(f"Shortcut not made ({lnk}): {e}")
+    return {"ok": bool(made), "made": made}
+
+
+def startup_shortcuts():
+    """First start: Start menu + desktop. Later starts: keep the Start menu one pointing here (folder moved)."""
+    st = read_json(SETTINGS_FILE, {}) or {}
+    first = not st.get("shortcutsMade")
+    res = make_shortcuts(desktop=first)
+    if first and res.get("ok"):
+        save_settings({"shortcutsMade": True})
+        log("Made the Start menu and desktop shortcuts")
+
+
+def api_shortcuts(req):
+    res = make_shortcuts(desktop=True)
+    if not res.get("ok"):
+        raise ApiError(res.get("why") or "Couldn't make the shortcuts (see the log).")
+    return res
+
+
 def api_meta(req):
     return {"app": APP_NAME, "version": APP_VERSION, "update": UPDATE or None, "game": read_json(os.path.join(GAME_DIR, "meta.json")), "job": dict(JOB), "dataDir": DATA_DIR}
 
@@ -211,11 +374,11 @@ def api_donate(req):
 
 
 # --- settings, hotkey capture, overlay ----------------------------------------
-DEFAULT_SETTINGS = {"hotkey": "F8", "moveHotkey": "F9", "region": "medium",
+DEFAULT_SETTINGS = {"hotkey": "F8", "moveHotkey": "F9", "region": "medium", "shortcutsMade": False,
                     "overlay": {"stripX": None, "stripY": None, "visible": True, "locked": True, "size": "l"}}
 # Overlay sizes: l = strip for the 180 px black bars around a 2560x1080 game on a 1440p screen,
 # m and s = smaller windows with only the important bits, for screens without black bars.
-OVERLAY_SIZES = {"l": (1000, 96), "m": (600, 64), "s": (320, 46)}
+OVERLAY_SIZES = {"l": (1000, 96), "m": (600, 64), "s": (380, 46)}
 OVERLAY_RADIUS = {"l": 10, "m": 9, "s": 8}
 
 
@@ -574,7 +737,10 @@ def start_tray():
 
 
 # --- standalone app window (same as Albion.loadouts) -----------------------
-WINDOW_PROFILE = os.path.join(os.environ.get("LOCALAPPDATA") or DATA_DIR, "AlbionAvaMapper", "window")
+# Release build: keep everything in the app's own folder (data\browser). From source: in LOCALAPPDATA,
+# so a synced Documents/OneDrive folder doesn't have to sync a browser profile.
+WINDOW_PROFILE = (os.path.join(DATA_DIR, "browser") if getattr(sys, "frozen", False)
+                  else os.path.join(os.environ.get("LOCALAPPDATA") or DATA_DIR, "AlbionAvaMapper", "window"))
 _window_proc = None
 _last_ping = None
 _bye_at = None
@@ -753,6 +919,10 @@ ROUTES = [
     ("POST", r"/api/open-folder", api_open_folder),
     ("POST", r"/api/donate", api_donate),
     ("POST", r"/api/open-release", api_open_release),
+    ("GET", r"/api/changelog", api_changelog),
+    ("GET", r"/api/donors", api_donors),
+    ("POST", r"/api/bug-report", api_bug_report),
+    ("POST", r"/api/shortcuts", api_shortcuts),
     ("POST", r"/api/shutdown", api_shutdown),
     ("GET", r"/api/ping", api_ping),
     ("POST", r"/api/bye", api_bye),
@@ -909,6 +1079,7 @@ def main():
         threading.Timer(0.3, lambda: open_app_window(url)).start()
     threading.Thread(target=watch_window, daemon=True).start()
     threading.Thread(target=check_update, daemon=True).start()
+    threading.Thread(target=startup_shortcuts, daemon=True).start()
     start_tray()
     if "--no-overlay" not in sys.argv:
         create_overlay()

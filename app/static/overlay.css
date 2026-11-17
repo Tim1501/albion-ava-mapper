@@ -115,12 +115,17 @@ body[data-size="m"] .ptime { font-size: 20px; }
 body[data-size="m"] .pbar { height: 3px; }
 body[data-size="m"] .pat { font-size: 10px; }
 
-/* ---- small: 340 x 46, only the essentials ---- */
+/* ---- small: 380 x 46, only the essentials: zone + chests on the left, zone type + resources on the right ---- */
+.c-side { display: none; }
 body[data-size="s"] .strip { padding: 6px 10px 6px 7px; border-radius: 8px; }
-body[data-size="s"] .main { grid-template-columns: minmax(0, 1fr) 78px; }
-body[data-size="s"] .c-loot { display: none; }
+body[data-size="s"] .main { grid-template-columns: minmax(0, 1fr) auto; }
+body[data-size="s"] .c-loot, body[data-size="s"] .c-portal { display: none; }
 body[data-size="s"] .main > section { padding: 0 0 0 9px; }
 body[data-size="s"] .main > section:first-child { padding-left: 0; padding-right: 9px; }
+body[data-size="s"] .c-side { display: grid; align-content: center; justify-items: end; gap: 3px; min-width: 0; }
+body[data-size="s"] .sconn { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: var(--text-2); white-space: nowrap; }
+body[data-size="s"] .sconn .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cc); opacity: .85; }
+body[data-size="s"] #sGather { display: flex; gap: 3px; }
 body[data-size="s"] .c-zone { gap: 7px; }
 body[data-size="s"] .tierbadge { width: 32px; height: 32px; border-radius: 7px; font-size: 13px; }
 body[data-size="s"] .zinfo { gap: 2px; }
@@ -131,9 +136,7 @@ body[data-size="s"] .zinfo.z-empty .zsub, body[data-size="s"] .zinfo.z-status .z
 body[data-size="s"] #zChips { display: flex; gap: 3px; }
 body[data-size="s"] .zinfo.z-empty #zChips, body[data-size="s"] .zinfo.z-status #zChips { display: none; }
 body[data-size="s"] .cc { height: 16px; font-size: 11px; padding: 0 4px 0 3px; gap: 3px; }
-body[data-size="s"] .c-portal { gap: 3px; justify-items: end; }
-body[data-size="s"] .plab, body[data-size="s"] .pat { display: none; }
-body[data-size="s"] .ptime { font-size: 16px; }
-body[data-size="s"] .pbar { height: 3px; width: 100%; }
+body[data-size="s"] .cc img { width: 13px; height: 13px; }
+body[data-size="s"] .cc .sz { font-size: 8.5px; }
 body[data-size="s"] .drag-hint { font-size: 8px; padding: 0 5px; }
 body[data-size="s"] #zChips .sz { display: none; }

@@ -58,6 +58,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .strip-items { display: flex; gap: 20px; flex: 1; flex-wrap: wrap; overflow: hidden; height: 18px; }
 .strip-item { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .strip-item i { width: 6px; height: 6px; border-radius: 50%; background: var(--good); }
+.clock-sep { margin: 0 6px; opacity: .5; }
 .strip-item b, .strip-clock b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
 .topbar { position: sticky; top: 0; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); }
 .topbar-inner { display: flex; align-items: center; gap: 26px; height: 56px; }

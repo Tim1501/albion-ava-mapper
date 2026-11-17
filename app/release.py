@@ -4,16 +4,18 @@ Build and publish Albion Ava Mapper.
     python app/release.py 1.0.1            build, commit, push, create GitHub release v1.0.1
     python app/release.py 1.0.1 --build    only build dist/Albion-Ava-Mapper-v1.0.1.zip (to test it)
 
-First add a "## 1.0.1" section to CHANGELOG.md: it becomes the release notes. Then this:
+First add the version at the top of CHANGELOG in app/server.py (shown on the app's Overview page
+under "What's new"; it also becomes the release notes). Then this:
 1. sets APP_VERSION in app/server.py
 2. builds the app folder with PyInstaller (folder build: single-file exes get flagged by antivirus far more)
 3. adds the current zone data, so it works right away without the first download
-4. zips it as Albion-Ava-Mapper-v1.0.1.zip (+ a .sha256 file)
+4. adds "Read me.txt" and zips the one folder as Albion-Ava-Mapper-v1.0.1.zip (+ a .sha256 file)
 5. commits, pushes and creates the GitHub release with the zip
 
 Everyone running an older copy then sees "Update to v1.0.1" in the header.
 Needs: pip install -r requirements.txt pyinstaller, and the GitHub CLI (gh) signed in once.
 """
+import ast
 import hashlib
 import os
 import re
@@ -39,9 +41,37 @@ def run(*cmd, cwd=ROOT):
 
 
 def notes_for(ver):
-    text = open(os.path.join(ROOT, "CHANGELOG.md"), encoding="utf-8").read()
-    m = re.search(rf"^## {re.escape(ver)}\s*\n(.*?)(?=^## |\Z)", text, re.M | re.S)
-    return m.group(1).strip() if m else None
+    """Bullet list for this version from CHANGELOG in app/server.py."""
+    for node in ast.parse(open(SERVER, encoding="utf-8").read()).body:
+        if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "CHANGELOG":
+            for v, _date, items in ast.literal_eval(node.value):
+                if v == ver:
+                    return "\n".join(f"- {it}" for it in items)
+    return None
+
+
+READ_ME = r"""Albion Ava Mapper
+=================
+
+Start it: double-click "Albion Ava Mapper.exe" in this folder.
+The first start also adds "Albion Ava Mapper" to your Start menu and your desktop.
+
+Everything the app uses stays in this one folder:
+  Albion Ava Mapper.exe   the app
+  _internal\              the app's own files (don't change these)
+  data\                   your settings, saved zones, zone data and logs
+
+Move the whole folder anywhere you like (then use Data > Make shortcuts in the app to fix the shortcuts).
+To remove the app, delete this folder and the two shortcuts.
+
+Updating: download the new zip and extract it over this folder. Your data\ stays.
+
+Something not working? In the app, open "Report a bug", make a report and send the zip to
+@ChanaMasala on Discord.
+
+Windows may warn that the app is from an unknown publisher (it's free and not code-signed):
+click "More info" > "Run anyway". The source code is public: {repo}
+"""
 
 
 def build(ver):
@@ -72,6 +102,9 @@ def build(ver):
     else:
         print("No data/game/zones.json: the release will download the zone data on first start")
 
+    with open(os.path.join(folder, "Read me.txt"), "w", encoding="utf-8") as f:
+        f.write(READ_ME.format(repo="https://github.com/Tim1501/albion-ava-mapper"))
+
     dist = os.path.join(ROOT, "dist")
     os.makedirs(dist, exist_ok=True)
     zpath = os.path.join(dist, f"Albion-Ava-Mapper-v{ver}.zip")
@@ -95,7 +128,7 @@ def main():
     ver = args[0]
     notes = notes_for(ver)
     if not notes:
-        sys.exit(f'Add a "## {ver}" section to CHANGELOG.md first.')
+        sys.exit(f"Add a CHANGELOG entry for {ver} at the top of CHANGELOG in app/server.py first.")
     zpath = build(ver)
     if "--build" in sys.argv:
         return

@@ -24,7 +24,9 @@ chests, gathering spots, dungeons, where it connects, and how long the portal st
 - **Search** type part of a name: `ce av` finds *Cetitos - Avixnum*
 - **Filter and sort** by tier, connection, gold or blue chests, best loot first
 - **Copy for Discord** a short summary of a zone, with a Discord timer for when the portal closes
-- **Saved zones**, **minimize to tray**, and an **update notice** when a new version is out
+- **Overview** with the best zones on the roads, top picks and what's new
+- **Portal times in UTC**, the same clock the game uses
+- **Saved zones**, **minimize to tray**, an **update notice** when a new version is out, and a one-click **bug report**
 
 Everything comes from Albion's own game files (via [ao-bin-dumps](https://github.com/ao-data/ao-bin-dumps)), not from other sites.
 
@@ -45,7 +47,12 @@ Everything comes from Albion's own game files (via [ao-bin-dumps](https://github
 1. Download **Albion-Ava-Mapper-vX.Y.Z.zip** from the
    [latest release](https://github.com/Tim1501/albion-ava-mapper/releases/latest).
 2. Right-click the zip > **Extract All**, and put the folder anywhere (e.g. your Documents).
-3. Open the folder and double-click **Albion Ava Mapper.exe**.
+3. Open the folder and double-click **Albion Ava Mapper.exe**. The first start also adds
+   **Albion Ava Mapper** to your Start menu and your desktop.
+
+Everything stays in that one folder: the app, and a `data` folder with your settings, saved
+zones and logs. To remove it, delete the folder and the two shortcuts. If you move the folder,
+use **Data > Make shortcuts** in the app to fix the shortcuts.
 
 Needs Windows 10 or 11 with Microsoft Edge (already installed on almost every PC).
 Nothing else to install.
@@ -72,7 +79,7 @@ Download the new zip and extract it over the old folder; your saved zones and se
 |---|---|---|
 | **Big** (default) | 1000 × 96 | Everything: chests, gathering with names, dungeons, portal timer, last read |
 | **Medium** | 600 × 64 | Zone, connection, chest and gathering icons with counts, portal timer |
-| **Small** | 320 × 46 | Just the zone, its chests and the portal timer |
+| **Small** | 380 × 46 | Just the zone, its chests, what it connects to and its resources (no timer) |
 
 Both keys can be changed on the **Overlay** page. That page also has show/hide, reset
 position, a test read, and **What it read**: if a read misses, it shows exactly what the app saw.
@@ -86,6 +93,8 @@ traffic or input.
 
 ## Troubleshooting
 
+- **Something's broken.** Open **Report a bug** in the app, write what happened and press
+  **Create bug report**. A zip is saved on your Desktop; send it to **@ChanaMasala** on Discord.
 - **F8 / F9 do nothing.** The app shows an orange warning when it can't use a key. Usually an
   older copy of the app is still running (quit it from its tray icon, or end it in Task Manager),
   or another program uses the same key (pick a different one on the Overlay page). If it still
@@ -106,6 +115,16 @@ Chest colours follow the game's own chest names: plain = **green**, *Veteran* = 
 *Elite* = **gold**; *Small* / *Medium* = **small** / **big**. After an Albion patch, use
 **Data > Update zone data** in the app.
 
+## For me: adding a supporter
+
+Edit [donors.json](donors.json) and push it; every copy of the app picks it up the next time
+its Supporters page opens (no new release needed):
+
+```json
+{"currency": "$", "updated": "2026-11-20",
+ "donors": [{"name": "Someone", "amount": 10, "message": "optional"}]}
+```
+
 ## Run from source
 
 Install [Python 3.10+](https://www.python.org/downloads/) and double-click
@@ -119,9 +138,11 @@ take a while, thank you for your patience.
 
 If the app helps you, please consider supporting it on PayPal:
 **[paypal.me/DeepTak646](https://www.paypal.com/paypalme/DeepTak646)** (or the **Donate**
-button in the app). Any amount is greatly appreciated.
+button in the app). Any amount is greatly appreciated. Supporters are listed on the app's
+**Supporters** page (from [donors.json](donors.json), updated by hand); write the name and
+message you'd like in the PayPal note.
 
-Found a bug or have an idea? Message me on Discord: **@ChanaMasala**.
+Found a bug or have an idea? Use **Report a bug** in the app, or message me on Discord: **@ChanaMasala**.
 
 \- ChanaMasala
 

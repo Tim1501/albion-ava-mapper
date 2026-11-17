@@ -9,7 +9,7 @@
 </head>
 <body class="ov" data-size="l">
 <!-- Display only. Three sizes (body data-size): l = 1000 x 96 strip for the black bar around a 21:9 game,
-     m = 600 x 64, s = 320 x 46 (just the essentials, for smaller screens: sits over the game all the time).
+     m = 600 x 64, s = 380 x 46 (just the essentials: zone, chests, zone type and resources; no timer).
      All controls live in the main app and the tray icon; when locked, clicks pass straight through. -->
 <div class="strip" id="strip">
   <div class="drag-hint">DRAG ME · <span id="hintKey">F9</span> LOCKS</div>
@@ -27,6 +27,10 @@
       <div class="lrow"><span class="lab">Chests</span><div class="pills" id="pChests"></div><div class="cchips" id="cChests"></div></div>
       <div class="lrow"><span class="lab">Gather</span><div class="pills" id="pGather"></div><div class="cchips" id="cGather"></div></div>
       <div class="lrow dung"><span class="lab">Dungeons</span><div class="pills" id="pDung"></div></div>
+    </section>
+    <section class="c-side">
+      <div class="sconn" id="sConn"></div>
+      <div class="cchips" id="sGather"></div>
     </section>
     <section class="c-portal" id="portal">
       <div class="plab">Portal <span class="pstat" id="pStat">No timer</span></div>

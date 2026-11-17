@@ -52,7 +52,8 @@ function renderZone() {
     $("#zName").classList.add("muted");
     renderSub();
     $("#pChests").innerHTML = $("#pGather").innerHTML = $("#pDung").innerHTML = '<span class="none">–</span>';
-    $("#cChests").innerHTML = $("#cGather").innerHTML = $("#zChips").innerHTML = '<span class="cnone">–</span>';
+    $("#cChests").innerHTML = $("#cGather").innerHTML = $("#zChips").innerHTML = $("#sGather").innerHTML = '<span class="cnone">–</span>';
+    $("#sConn").innerHTML = "";
     return;
   }
   const z = current;
@@ -62,7 +63,9 @@ function renderZone() {
   $("#zName").classList.remove("muted");
   renderSub();
   $("#cChests").innerHTML = $("#zChips").innerHTML = compactChests(z.chests);
-  $("#cGather").innerHTML = compactGather(z);
+  $("#cGather").innerHTML = $("#sGather").innerHTML = compactGather(z);
+  const cc = CONN[z.conn] || CONN.roads;
+  $("#sConn").innerHTML = `<span class="dot" style="--cc:${cc.color}"></span>${esc(z.connLabel)}`;
 
   const c = z.chests;
   const chest = (n, cls, label, big) => (n ? `<span class="pill ${cls}"><span class="chest${big ? " big" : ""}"></span><b>${n}</b>${label}</span>` : "");
@@ -111,7 +114,7 @@ function renderPortal() {
   $("#pStat").textContent = { ok: "Open", soon: "Closing soon", last: "Last minutes", closed: "Closed" }[s];
   $("#pTime").textContent = left <= 0 ? "CLOSED" : fmtLeft(left);
   $("#pBar").style.width = `${Math.max(0, Math.min(100, (left / (closesTotal || left || 1)) * 100))}%`;
-  $("#pAt").textContent = `closes at ${new Date(closesAt * 1000).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+  $("#pAt").textContent = `closes at ${new Date(closesAt * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC`;
 }
 setInterval(renderPortal, 1000);
 

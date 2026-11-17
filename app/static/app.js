@@ -116,7 +116,7 @@ function renderPortalLine() {
   const left = OV.closesAt - Date.now() / 1000;
   const cls = left <= 0 ? "bad" : left < 900 ? "bad" : left < 3600 ? "warn" : "ok";
   el.hidden = false;
-  el.innerHTML = `Portal ${left <= 0 ? '<b class="bad">closed</b>' : `closes in <b class="${cls}">${fmtLeft(left)}</b>`} · at ${new Date(OV.closesAt * 1000).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+  el.innerHTML = `Portal ${left <= 0 ? '<b class="bad">closed</b>' : `closes in <b class="${cls}">${fmtLeft(left)}</b>`} · at ${new Date(OV.closesAt * 1000).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" })} UTC (game time)`;
 }
 let ovSeq = -1;
 async function pollOverlay() {
@@ -218,6 +218,79 @@ async function renderData() {
   if (meta.job.running) watchJob("#dataProgress");
 }
 
+// -------------------------------------------------------------- overview --
+const chestText = (z) => {
+  const c = z.chests;
+  return [[c.gold_big, "big gold"], [c.gold_small, "small gold"], [c.blue_big, "big blue"], [c.blue_small, "small blue"], [c.green, "green"]]
+    .filter(([n]) => n).map(([n, l]) => `${n} ${l}`).join(" · ") || "no chests";
+};
+const gatherText = (z) => gatherGroups(z).map((g) => `${g.n > 1 ? g.n + " " : ""}${g.type} ${g.size}`).join(" · ") || "no gathering";
+const byLoot = (a, b) => loot(b) - loot(a) || chestCount(b) - chestCount(a) || a.name.localeCompare(b.name);
+let CHANGES = null;
+
+async function renderOverview() {
+  $("#ovwKey").textContent = SETTINGS?.hotkey || "F8";
+  const sum = (k) => ZONES.reduce((n, z) => n + z.chests[k], 0);
+  $("#ovwStats").innerHTML = `
+    <span class="hero-stat"><b>${ZONES.length}</b>zones</span>
+    <span class="hero-stat"><b>${sum("gold_big") + sum("gold_small")}</b>gold chests</span>
+    <span class="hero-stat"><b>${ZONES.filter((z) => z.gather.some((g) => g.size === "big")).length}</b>zones with big gathering</span>`;
+  $("#ovwBest").innerHTML = [...ZONES].sort(byLoot).slice(0, 6).map((z) => card(z, "", { saved: saved.has(z.id) })).join("");
+  const groups = [
+    ["Most big gold chests", [...ZONES].sort((a, b) => b.chests.gold_big - a.chests.gold_big || byLoot(a, b)), chestText],
+    ["Best for gathering", [...ZONES].sort((a, b) => gatherScore(b) - gatherScore(a) || byLoot(a, b)), gatherText],
+    ["Best route to a Royal city", ZONES.filter((z) => z.conn === "royal").sort(byLoot), chestText],
+    ["Best route to the Black zone", ZONES.filter((z) => z.conn === "black").sort(byLoot), chestText],
+  ];
+  $("#ovwPicks").innerHTML = groups.map(([title, list, what]) => `<div class="pick-group"><h4>${title}</h4>${list.slice(0, 3).map((z) =>
+    `<button class="pick-row" data-open="${z.id}" title="Open ${esc(z.name)}"><span class="t">T${z.tier}</span><span class="n">${esc(z.name)}</span><span class="w">${esc(what(z))}</span></button>`).join("")}</div>`).join("");
+  if (!CHANGES) { try { CHANGES = await api("GET", "/api/changelog"); } catch { CHANGES = []; } }
+  const fmt = (d) => new Date(d + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+  $("#ovwChanges").innerHTML = CHANGES.slice(0, 4).map((c) => `<div><div class="cl-ver"><b>v${esc(c.version)}</b><span>${fmt(c.date)}</span></div><ul>${c.items.map((i) => `<li>${esc(i)}</li>`).join("")}</ul></div>`).join("")
+    || '<p class="muted">Nothing yet.</p>';
+}
+
+function openZone(id) {
+  const z = ZONES.find((x) => x.id === id);
+  if (!z) return;
+  filters.tier = 0; filters.conn = ""; filters.loot = "";
+  renderFilters();
+  goto("zones");
+  $("#search").value = z.name;
+  shown = PAGE;
+  renderResults();
+}
+
+// ------------------------------------------------------------ supporters --
+async function renderSupporters() {
+  $("#supSub").textContent = "Loading…";
+  let d;
+  try { d = await api("GET", "/api/donors"); } catch (err) { $("#supSub").textContent = err.message; return; }
+  const cur = d.currency || "$";
+  const amt = (n) => `${cur}${Number.isInteger(n) ? n : n.toFixed(2)}`;
+  const upd = d.updated ? `Updated ${new Date(d.updated + "T12:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}` : "";
+  $("#supSub").textContent = [d.donors.length ? `${d.donors.length} supporter${d.donors.length === 1 ? "" : "s"}` : "", upd,
+    d.online ? "" : "offline: showing the last list downloaded", "I update this list by hand, so it can take a little while."].filter(Boolean).join(" · ");
+  $("#supList").innerHTML = d.donors.length ? d.donors.map((x, i) => `<div class="sup-row r${i + 1}"><span class="sup-rank">${i + 1}</span>
+    <div><div class="sup-name">${esc(x.name)}</div>${x.message ? `<div class="sup-msg">“${esc(x.message)}”</div>` : ""}</div><span class="sup-amt">${amt(x.amount)}</span></div>`).join("")
+    : '<div class="empty"><b>No supporters yet.</b><br>Be the first :p</div>';
+}
+
+// ------------------------------------------------------------- bug report --
+async function makeBugReport() {
+  const btn = $("#btnBugReport");
+  btn.disabled = true;
+  try {
+    const r = await api("POST", "/api/bug-report", { what: $("#bugWhat").value, image: $("#bugImage").checked });
+    const box = $("#bugDone");
+    box.hidden = false;
+    box.innerHTML = `<b>Saved${r.onDesktop ? " on your Desktop" : " in the data folder"}.</b> The folder opened with the file selected:<br><code>${esc(r.path)}</code><br>
+      Now send it to <button class="discord-name" data-copy-discord>@ChanaMasala</button> on Discord: drag the zip into the chat.${r.image ? "<br>It includes the picture from your last F8 read." : ""}`;
+    toast("Bug report saved");
+  } catch (err) { toast(err.message, true); }
+  btn.disabled = false;
+}
+
 // ------------------------------------------------------------ navigation --
 function goto(tab) {
   $$(".nav button").forEach((b) => b.classList.toggle("active", b.dataset.tab === tab));
@@ -226,6 +299,8 @@ function goto(tab) {
   if (tab === "data") renderData();
   if (tab === "overlay") renderOverlayPage();
   if (tab === "zones") setTimeout(() => $("#search").focus(), 30);
+  if (tab === "overview") renderOverview();
+  if (tab === "supporters") renderSupporters();
   window.scrollTo(0, 0);
 }
 
@@ -270,8 +345,8 @@ function start() {
   renderStats();
   renderResults();
   renderSaved();
-  renderSettings().catch(() => {});
-  goto("zones");
+  renderSettings().catch(() => {}).then(() => { $("#ovwKey").textContent = SETTINGS?.hotkey || "F8"; });
+  goto("overview");
 }
 
 function showVersion(meta) {
@@ -336,6 +411,16 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (t.dataset.show) { showInOverlay(t.dataset.show); return; }
+  if (t.dataset.open) { openZone(t.dataset.open); return; }
+  if (t.dataset.donate !== undefined) {
+    api("POST", "/api/donate").then(() => toast("Thank you! The PayPal page opened in your browser.")).catch((err) => toast(err.message, true));
+    return;
+  }
+  if (t.dataset.copyDiscord !== undefined) {
+    try { await navigator.clipboard.writeText("ChanaMasala"); toast("Copied ChanaMasala. Paste it in Discord's search to find me."); }
+    catch (err) { toast(`Couldn't copy: ${err.message}`, true); }
+    return;
+  }
   if (t.dataset.size && t.classList.contains("size-opt")) {
     try {
       await api("POST", "/api/overlay/size", { size: t.dataset.size });
@@ -402,13 +487,10 @@ document.addEventListener("click", async (e) => {
     case "btnUpdateApp":
       api("POST", "/api/open-release").then(() => toast("The download page opened in your browser. Unzip it over this folder; your data stays.")).catch((err) => toast(err.message, true));
       break;
-    case "btnDonate":
-    case "btnDonateFoot":
-      api("POST", "/api/donate").then(() => toast("Thank you! The PayPal page opened in your browser.")).catch((err) => toast(err.message, true));
-      break;
-    case "btnDiscord":
-      try { await navigator.clipboard.writeText("ChanaMasala"); toast("Copied ChanaMasala. Paste it in Discord to report a bug."); }
-      catch (err) { toast(`Couldn't copy: ${err.message}`, true); }
+    case "btnBugReport": makeBugReport(); break;
+    case "btnShortcuts":
+      try { const r = await api("POST", "/api/shortcuts"); toast(`Made ${r.made.length} shortcut${r.made.length === 1 ? "" : "s"}: Start menu${r.made.length > 1 ? " and desktop" : ""}`); }
+      catch (err) { toast(err.message, true); }
       break;
     case "btnOpenData": api("POST", "/api/open-folder").catch((err) => toast(err.message, true)); break;
     case "btnQuit":
@@ -432,6 +514,7 @@ function tickClock() {
   const d = new Date();
   $("#clockDay").textContent = d.toLocaleDateString(undefined, { weekday: "short" });
   $("#clockTime").textContent = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  $("#clockUtc").textContent = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "UTC" });
 }
 setInterval(tickClock, 1000);
 tickClock();
