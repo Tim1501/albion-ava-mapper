@@ -1,4 +1,7 @@
 <!doctype html>
+<!-- Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+     Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+     this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -105,12 +108,6 @@
       </div>
     </div>
 
-    <div class="section-head spaced">
-      <div><h2>Best zones on the roads</h2><p class="section-sub">Most valuable chests first (gold counts most, then blue, then green).</p></div>
-      <button class="btn" data-goto="zones">All zones</button>
-    </div>
-    <div class="zone-grid" id="ovwBest"></div>
-
     <div class="ovw-cols">
       <div class="panel">
         <div class="panel-head"><h3>Top picks</h3><p>Click one to open it.</p></div>
@@ -121,6 +118,12 @@
         <div class="changelog" id="ovwChanges"></div>
       </div>
     </div>
+    <div class="section-head spaced">
+      <div><h2>Best zones on the roads</h2><p class="section-sub">Most valuable chests first (gold counts most, then blue, then green).</p></div>
+      <button class="btn" data-goto="zones">All zones</button>
+    </div>
+    <div class="zone-grid" id="ovwBest"></div>
+
   </section>
 
   <!-- ZONES -->
@@ -258,7 +261,7 @@
       <div class="panel sup-note">
         <span class="made-av">CM</span>
         <div>
-          <p>Hey, it's <b>ChanaMasala</b>, and I love making tools for the games I enjoy playing. The source code and everything is public, and you are free to make your own changes to it :p</p>
+          <p>Hey, it's <b>ChanaMasala</b>, and I love making tools for the games I enjoy playing. The source code and everything is public, and you are free to make your own changes to it for yourself :p (sharing or reusing it needs my OK, see the <a href="#" data-goto="data" data-anchor="terms">terms</a>).</p>
           <p>However, even with the help of AI, this does take a fair bit of my time. If you want to support what I do, even a little donation helps, since I make it for free, without ads, and without hiding it behind a login screen.</p>
           <p>Thanks a lot for supporting me.</p>
           <div class="made-actions">
@@ -322,6 +325,16 @@
         <div class="actions"><button class="btn" id="btnUpdate">Update zone data</button><button class="btn ghost" id="btnOpenData">Open data folder</button><button class="btn ghost" id="btnShortcuts" title="Start menu and desktop shortcuts to this copy of the app">Make shortcuts</button></div>
         <div class="progress" id="dataProgress" hidden><div class="bar"><i></i></div><span></span></div>
       </div>
+      <div class="panel" id="terms">
+        <div class="panel-head"><h3>Terms of use</h3><p>The short version of the LICENSE file that comes with the app.</p></div>
+        <ul class="terms">
+          <li><b>Free for personal use.</b> Use it, and change it on your own PC for yourself, as much as you like.</li>
+          <li><b>Ask first</b> (Discord: @ChanaMasala) before you share a copy or a changed version, put the code or any part of it in another project, sell it, or put it behind a paywall, login or ads.</li>
+          <li><b>No AI use without permission.</b> Using the code, data files or text of this app to train, fine-tune or feed an AI model, or asking an AI to copy or rebuild this app from it, also needs my written permission.</li>
+          <li>Albion Online, its names and its art belong to Sandbox Interactive. This app is unofficial and not affiliated with them.</li>
+          <li>It comes as it is, without any warranty.</li>
+        </ul>
+      </div>
       <div class="panel">
         <div class="panel-head"><h3>What the card shows</h3></div>
         <div class="legend">
@@ -340,6 +353,7 @@
   <div class="footer-inner">
     <div class="footer-brand">
       <span class="brand"><img src="icon.png" alt="" width="22" height="22"><span class="brand-text">Albion Ava <span class="brand-accent">Mapper</span></span></span>
+      <p class="terms-line">© 2026 ChanaMasala. Free for personal use. Copying, republishing, selling or using this app or its code to train or feed AI needs my written permission. <a href="#" data-goto="data" data-anchor="terms">Terms</a></p>
       <p><span class="ver" id="appVer"></span>Free, unofficial Roads of Avalon zone finder. Data from Albion's game files via ao-bin-dumps. Albion Online and its art © Sandbox Interactive.</p>
     </div>
     <div class="footer-side">

@@ -1,3 +1,6 @@
+# Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+# Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+# this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE.
 """Albion Ava Mapper - search Roads of Avalon zones and see what each one holds.
 
 Runs a small web server on 127.0.0.1 and opens the UI in its own Edge app window.

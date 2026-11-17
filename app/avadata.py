@@ -1,3 +1,6 @@
+# Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+# Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+# this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE.
 """Builds the Roads of Avalon zone cards from Albion's own game files (ao-bin-dumps).
 
 For every Avalonian zone it works out, straight from the game data:

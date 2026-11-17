@@ -1,3 +1,6 @@
+# Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+# Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+# this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE.
 """
 Build and publish Albion Ava Mapper.
 
@@ -71,6 +74,9 @@ Something not working? In the app, open "Report a bug", make a report and send t
 
 Windows may warn that the app is from an unknown publisher (it's free and not code-signed):
 click "More info" > "Run anyway". The source code is public: {repo}
+
+(c) 2026 ChanaMasala. Free for personal use. Sharing copies, reusing the code, or using it with AI
+to train on, copy or rebuild the app needs written permission. See LICENSE.txt.
 """
 
 
@@ -102,6 +108,7 @@ def build(ver):
     else:
         print("No data/game/zones.json: the release will download the zone data on first start")
 
+    shutil.copyfile(os.path.join(ROOT, "LICENSE"), os.path.join(folder, "LICENSE.txt"))
     with open(os.path.join(folder, "Read me.txt"), "w", encoding="utf-8") as f:
         f.write(READ_ME.format(repo="https://github.com/Tim1501/albion-ava-mapper"))
 

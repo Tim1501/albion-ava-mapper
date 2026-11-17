@@ -1,3 +1,6 @@
+# Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+# Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+# this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE.
 """Hotkey capture: grab the screen around the mouse, read it with Windows OCR, find the zone name.
 
 Only reads pixels from the screen (like a screenshot). It never touches the game's memory,

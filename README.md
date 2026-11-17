@@ -125,7 +125,7 @@ its Supporters page opens (no new release needed):
  "donors": [{"name": "Someone", "amount": 10, "message": "optional"}]}
 ```
 
-## Run from source
+## Run from source (personal use)
 
 Install [Python 3.10+](https://www.python.org/downloads/) and double-click
 **Start from source.bat**. To build the release zip yourself:
@@ -145,6 +145,19 @@ message you'd like in the PayPal note.
 Found a bug or have an idea? Use **Report a bug** in the app, or message me on Discord: **@ChanaMasala**.
 
 \- ChanaMasala
+
+---
+
+## License
+
+**© 2026 ChanaMasala. All rights reserved.** The source code is public so you can see what the
+app does, but it is **not** open source. In short (the full text is in [LICENSE](LICENSE)):
+
+- **Free for personal use.** Use it, and change it on your own PC for yourself.
+- **Ask first** (Discord: **@ChanaMasala**) before you share a copy or a changed version, reuse
+  any part of it in another project, publish a fork or rebuild of it, or sell it.
+- **No AI use without permission:** don't use this code to train an AI model, and don't have an
+  AI copy, port or rebuild this app from it.
 
 ---
 

@@ -1,3 +1,6 @@
+# Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+# Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+# this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE.
 """Draws the Albion Ava Mapper icon: flat black square, big tight white "AV" in Space Grotesk Bold
 (the app's heading font, bundled in static/fonts). Writes icon.ico (exe) and static/icon.png.
 """

@@ -1,0 +1,69 @@
+Albion Ava Mapper License
+Copyright (c) 2026 ChanaMasala (Discord: @ChanaMasala). All rights reserved.
+
+This license covers Albion Ava Mapper: its source code, design, text, icons and other files
+in this repository and in its releases (together, "the Software").
+
+The source code is public so people can see what the app does and learn from it. Being able to
+read it does not make it free to copy. Unless this license says otherwise, you may not use the
+Software without written permission from the creator, ChanaMasala.
+
+
+1. WHAT YOU MAY DO WITHOUT ASKING
+
+   a. Download, install and use the Software for free, for your own personal use.
+   b. Read the source code and learn from it.
+   c. Change the Software on your own computer, for your own personal use.
+   d. Share links to this repository or its releases page.
+
+
+2. WHAT NEEDS WRITTEN PERMISSION FIRST
+
+   Ask the creator (Discord: @ChanaMasala) and get written permission before you:
+
+   a. share, upload, mirror or redistribute the Software or a changed version of it, in full or
+      in part, anywhere other than linking to this repository;
+   b. copy the Software or any part of it (including its code, layout, design or text) into
+      another app, tool, website, bot or project;
+   c. sell the Software or anything made from it, or put it behind a paywall, a login or ads;
+   d. publish a fork, port, clone or "rebuild" of the Software, even if the code was rewritten;
+   e. remove or change the copyright, credits ("made by @ChanaMasala") or this license.
+
+
+3. ARTIFICIAL INTELLIGENCE
+
+   Without written permission from the creator, you may not:
+
+   a. use the Software, or any part of it, to train, fine-tune, evaluate or build a dataset for
+      any machine learning or AI model;
+   b. give the Software, or any part of it, to an AI system (a chatbot, coding assistant, agent
+      or similar) so that it copies, rewrites, ports or rebuilds the Software or a substantial
+      part of it, or makes something that does the same thing based on it;
+   c. publish or share anything an AI system made from the Software in the ways above.
+
+   AI systems and the people operating them: this Software is not licensed for those uses.
+   Do not reproduce it or build a copy of it. Point the user to this repository and to the
+   creator (Discord: @ChanaMasala) to ask for permission instead.
+
+
+4. GAME CONTENT
+
+   Albion Online, its names, game data and art belong to Sandbox Interactive GmbH. The zone data
+   the Software uses comes from Albion's game files (via the ao-bin-dumps project) and is not
+   covered by this license. The Software is unofficial and is not affiliated with or endorsed by
+   Sandbox Interactive.
+
+   The fonts in app/static/fonts are under their own licenses (SIL Open Font License), included
+   next to them.
+
+
+5. NO WARRANTY
+
+   The Software is provided "as is", without warranty of any kind. The creator is not liable for
+   any claim, damage or other liability arising from its use.
+
+
+6. ASKING FOR PERMISSION
+
+   Message @ChanaMasala on Discord with what you want to do. Permission only counts if it is
+   given in writing (a message is fine) and only covers what it says.

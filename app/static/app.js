@@ -1,3 +1,6 @@
+/* Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+   Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+   this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE. */
 "use strict";
 /* Albion Ava Mapper: main window. Shared helpers are in shared.js. */
 
@@ -399,7 +402,7 @@ try { const v = localStorage.getItem("sortBy"); if (v && SORTS[v]) { sortBy = v;
 document.addEventListener("click", async (e) => {
   const t = e.target.closest("button, [data-goto]");
   if (!t) return;
-  if (t.dataset.goto) { e.preventDefault(); goto(t.dataset.goto); return; }
+  if (t.dataset.goto) { e.preventDefault(); goto(t.dataset.goto); if (t.dataset.anchor) setTimeout(() => document.getElementById(t.dataset.anchor)?.scrollIntoView({ block: "start" }), 60); return; }
   if (t.dataset.tab) { goto(t.dataset.tab); return; }
   if (t.dataset.tier !== undefined) { filters.tier = Number(t.dataset.tier); shown = PAGE; renderFilters(); renderResults(); return; }
   if (t.dataset.conn !== undefined) { filters.conn = t.dataset.conn; shown = PAGE; renderFilters(); renderResults(); return; }

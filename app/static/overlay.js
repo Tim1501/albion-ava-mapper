@@ -1,3 +1,6 @@
+/* Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
+   Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
+   this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE. */
 "use strict";
 /* Albion Ava Mapper overlay strip: display only (Gem Notifier style). Controls are in the main app and tray. */
 
