@@ -8,11 +8,39 @@ let closesTotal = null;    // seconds left when it was read, for the progress ba
 let lastSeq = -1;
 let locked = null;
 let keys = { read: "F8", move: "F9" };
+let size = "l";            // l (big strip), m (medium), s (small: essentials only)
+let readFail = null;       // last read's problem, shown in place of the connection line in the compact sizes
 
 const fmtClock = (iso) => (iso ? new Date(iso).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }) : "");
 function fmtLeft(sec) {
   const s = Math.max(0, Math.floor(sec)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
   return h ? `${h}:${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}` : `${String(m).padStart(2, "0")}:${String(r).padStart(2, "0")}`;
+}
+
+function compactChests(c) {
+  const chip = (n, cls, big, title) => (n ? `<span class="cc ${cls}" title="${title}"><span class="chest${big ? " big" : ""}"></span>${n}${big ? '<span class="sz">BIG</span>' : ""}</span>` : "");
+  return [
+    chip(c.gold_big, "gold", true, "big gold"), chip(c.gold_small, "gold", false, "small gold"),
+    chip(c.blue_big, "blue", true, "big blue"), chip(c.blue_small, "blue", false, "small blue"),
+    chip(c.green, "green", false, "green"),
+  ].join("") || '<span class="cnone">No chests</span>';
+}
+function compactGather(z) {
+  return gatherGroups(z).map((g) => {
+    const icon = RES_ICON[g.type] ? `<img src="/icon/res/${RES_ICON[g.type]}.png" alt="">` : esc(g.type.slice(0, 2));
+    return `<span class="cc res${g.size === "big" ? " big" : ""}" title="${g.n} ${esc(g.type)} ${g.size}">${icon}${g.n > 1 ? g.n : ""}<span class="sz">${g.size === "big" ? "BIG" : "S"}</span></span>`;
+  }).join("") || '<span class="cnone">No gathering</span>';
+}
+
+function renderSub() {
+  const info = $(".zinfo");
+  const fail = size !== "l" && readFail;
+  info.classList.toggle("z-empty", !current);
+  info.classList.toggle("z-status", !!fail && !!current);
+  if (fail) { $("#zSub").innerHTML = fail; return; }
+  if (!current) { $("#zSub").innerHTML = size === "l" ? `Hover a portal, press <b>${esc(keys.read)}</b>` : `Press <b>${esc(keys.read)}</b> on a portal`; return; }
+  const conn = CONN[current.conn] || CONN.roads;
+  $("#zSub").innerHTML = `<span class="dot" style="--cc:${conn.color}"></span><b>${esc(current.connLabel)}</b><span class="zid">${esc(current.id)}</span>`;
 }
 
 function renderZone() {
@@ -22,17 +50,19 @@ function renderZone() {
     tier.removeAttribute("data-t");
     $("#zName").textContent = "No zone yet";
     $("#zName").classList.add("muted");
-    $("#zSub").innerHTML = `Hover a portal, press <b>${esc(keys.read)}</b>`;
+    renderSub();
     $("#pChests").innerHTML = $("#pGather").innerHTML = $("#pDung").innerHTML = '<span class="none">–</span>';
+    $("#cChests").innerHTML = $("#cGather").innerHTML = $("#zChips").innerHTML = '<span class="cnone">–</span>';
     return;
   }
   const z = current;
-  const conn = CONN[z.conn] || CONN.roads;
   tier.textContent = `T${z.tier}`;
   tier.dataset.t = z.tier;
   $("#zName").textContent = z.name;
   $("#zName").classList.remove("muted");
-  $("#zSub").innerHTML = `<span class="dot" style="--cc:${conn.color}"></span><b>${esc(z.connLabel)}</b><span class="zid">${esc(z.id)}</span>`;
+  renderSub();
+  $("#cChests").innerHTML = $("#zChips").innerHTML = compactChests(z.chests);
+  $("#cGather").innerHTML = compactGather(z);
 
   const c = z.chests;
   const chest = (n, cls, label, big) => (n ? `<span class="pill ${cls}"><span class="chest${big ? " big" : ""}"></span><b>${n}</b>${label}</span>` : "");
@@ -53,6 +83,9 @@ function renderZone() {
 function renderRead(st) {
   const el = $("#zRead");
   const t = fmtClock(st.at);
+  readFail = !st.at || st.id ? null
+    : st.error ? '<span class="zst err">ERROR</span>&nbsp;see the app' : '<span class="zst warn">NO ZONE</span>&nbsp;near the mouse';
+  renderSub();
   if (!st.at) el.innerHTML = "";
   else if (st.error) el.innerHTML = `<span class="err">ERROR</span> · see the app · ${t}`;
   else if (st.id && !st.text) el.innerHTML = `<span class="ok">PICKED</span> in the app · ${t}`;
@@ -68,7 +101,7 @@ function renderPortal() {
     $("#pStat").textContent = "No timer";
     $("#pTime").textContent = "--:--";
     $("#pBar").style.width = "0";
-    $("#pAt").textContent = "read from the portal tooltip";
+    $("#pAt").textContent = size === "l" ? "read from the portal tooltip" : "no timer yet";
     return;
   }
   const left = closesAt - Date.now() / 1000;
@@ -96,6 +129,7 @@ async function poll() {
   const k = { read: hk.read?.hotkey || keys.read, move: hk.move?.hotkey || keys.move };
   if (k.read !== keys.read || k.move !== keys.move) { keys = k; if (!current) renderZone(); }
   $("#hintKey").textContent = keys.move;
+  if (st.size && st.size !== size) { size = st.size; document.body.dataset.size = size; renderZone(); }
   if (st.locked !== locked) applyLock(st.locked);
   if (st.seq === lastSeq) return;
   lastSeq = st.seq;

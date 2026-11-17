@@ -20,7 +20,7 @@ chests, gathering spots, dungeons, where it connects, and how long the portal st
 
 - **All 400 Avalonian zones** with their chests (green, blue, gold, small and big), gathering spots (type and size), solo/group/elite dungeons and connection (Royal, Black zone, Hideout, Deeper)
 - **F8 reads the portal tooltip** under your mouse and shows that zone on the overlay, with a countdown until the portal closes
-- **Overlay** a compact strip that fits in the black bars around an ultrawide (21:9) game. It's click-through, so it never gets in the way, and it shows up in your screenshots
+- **Overlay in three sizes**: **Big** fits the black bars around an ultrawide (21:9) game; **Medium** and **Small** show only the important bits, for normal screens. It's click-through, so it never gets in the way, and it shows up in your screenshots
 - **Search** type part of a name: `ce av` finds *Cetitos - Avixnum*
 - **Filter and sort** by tier, connection, gold or blue chests, best loot first
 - **Copy for Discord** a short summary of a zone, with a Discord timer for when the portal closes
@@ -65,6 +65,14 @@ Download the new zip and extract it over the old folder; your saved zones and se
 |---|---|
 | **F8** | Read the portal tooltip under the mouse |
 | **F9** | Unlock the overlay to drag it somewhere else; press again to lock it |
+
+**Overlay size** (Overlay page, or right-click the tray icon):
+
+| Size | Pixels | Shows |
+|---|---|---|
+| **Big** (default) | 1000 × 96 | Everything: chests, gathering with names, dungeons, portal timer, last read |
+| **Medium** | 600 × 64 | Zone, connection, chest and gathering icons with counts, portal timer |
+| **Small** | 320 × 46 | Just the zone, its chests and the portal timer |
 
 Both keys can be changed on the **Overlay** page. That page also has show/hide, reset
 position, a test read, and **What it read**: if a read misses, it shows exactly what the app saw.

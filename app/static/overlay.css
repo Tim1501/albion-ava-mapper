@@ -45,6 +45,8 @@ body.ov { display: block; min-height: 0; user-select: none; }
 .zread .ok { color: var(--ov-green); font-weight: 700; }
 .zread .warn { color: var(--ov-orange); font-weight: 700; }
 .zread .err { color: var(--ov-red); font-weight: 700; }
+.zst { font: 700 10.5px var(--mono); letter-spacing: .04em; }
+.zst.warn { color: var(--ov-orange); } .zst.err { color: var(--ov-red); }
 
 /* contents */
 .c-loot { display: grid; align-content: center; gap: 4px; }
@@ -80,3 +82,58 @@ body.ov { display: block; min-height: 0; user-select: none; }
 .c-portal[data-s] .ptime { color: var(--pc); }
 .c-portal[data-s] .pbar i { background: var(--pc); }
 .c-portal[data-s] .pstat { --c: var(--pc); }
+
+/* compact chips (medium + small): just an icon and a count, big chests drawn bigger */
+.cchips { display: none; gap: 5px; align-items: center; flex-wrap: nowrap; min-width: 0; overflow: hidden; }
+.cc { --c: var(--muted); flex: none; display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 6px 0 5px; border-radius: 4px;
+  font: 700 12px var(--head); color: var(--ov-text); background: color-mix(in srgb, var(--c) 10%, transparent); border: 1px solid color-mix(in srgb, var(--c) 32%, transparent); }
+.cc.green { --c: var(--ov-green); } .cc.blue { --c: var(--ov-blue); } .cc.gold { --c: var(--ov-gold); }
+.cc.res { --c: #8f8983; } .cc.res.big { --c: var(--ov-teal); }
+.cc img { width: 15px; height: 15px; margin: 0 -1px 0 -2px; }
+.cc .sz { font: 700 9px var(--mono); color: var(--c); letter-spacing: .02em; }
+.cc .chest { width: 10px; height: 8px; } .cc .chest.big { width: 14px; height: 10px; }
+.cnone { font-size: 11px; color: var(--faint); }
+
+/* ---- medium: 600 x 64 ---- */
+body[data-size="m"] .strip { padding: 7px 12px 7px 9px; border-radius: 9px; }
+body[data-size="m"] .main { grid-template-columns: 196px minmax(0, 1fr) 104px; }
+body[data-size="m"] .main > section { padding: 0 11px; }
+body[data-size="m"] .main > section:first-child { padding-left: 0; }
+body[data-size="m"] .main > section:last-child { padding-right: 0; }
+body[data-size="m"] .c-zone { gap: 8px; }
+body[data-size="m"] .tierbadge { width: 36px; height: 36px; border-radius: 8px; font-size: 14px; }
+body[data-size="m"] .zname { font-size: 14.5px; }
+body[data-size="m"] .zsub { font-size: 11.5px; }
+body[data-size="m"] .zsub .zid, body[data-size="m"] .zread { display: none; }
+body[data-size="m"] .c-loot { gap: 4px; }
+body[data-size="m"] .lrow { grid-template-columns: minmax(0, 1fr); height: 19px; }
+body[data-size="m"] .lab, body[data-size="m"] .pills, body[data-size="m"] .lrow.dung { display: none; }
+body[data-size="m"] .lrow .cchips { display: flex; }
+body[data-size="m"] .c-portal { gap: 3px; }
+body[data-size="m"] .plab { display: none; }
+body[data-size="m"] .ptime { font-size: 20px; }
+body[data-size="m"] .pbar { height: 3px; }
+body[data-size="m"] .pat { font-size: 10px; }
+
+/* ---- small: 340 x 46, only the essentials ---- */
+body[data-size="s"] .strip { padding: 6px 10px 6px 7px; border-radius: 8px; }
+body[data-size="s"] .main { grid-template-columns: minmax(0, 1fr) 78px; }
+body[data-size="s"] .c-loot { display: none; }
+body[data-size="s"] .main > section { padding: 0 0 0 9px; }
+body[data-size="s"] .main > section:first-child { padding-left: 0; padding-right: 9px; }
+body[data-size="s"] .c-zone { gap: 7px; }
+body[data-size="s"] .tierbadge { width: 32px; height: 32px; border-radius: 7px; font-size: 13px; }
+body[data-size="s"] .zinfo { gap: 2px; }
+body[data-size="s"] .zname { font-size: 13px; line-height: 1.15; }
+body[data-size="s"] .zread { display: none; }
+body[data-size="s"] .zsub { display: none; font-size: 11px; }
+body[data-size="s"] .zinfo.z-empty .zsub, body[data-size="s"] .zinfo.z-status .zsub { display: flex; }
+body[data-size="s"] #zChips { display: flex; gap: 3px; }
+body[data-size="s"] .zinfo.z-empty #zChips, body[data-size="s"] .zinfo.z-status #zChips { display: none; }
+body[data-size="s"] .cc { height: 16px; font-size: 11px; padding: 0 4px 0 3px; gap: 3px; }
+body[data-size="s"] .c-portal { gap: 3px; justify-items: end; }
+body[data-size="s"] .plab, body[data-size="s"] .pat { display: none; }
+body[data-size="s"] .ptime { font-size: 16px; }
+body[data-size="s"] .pbar { height: 3px; width: 100%; }
+body[data-size="s"] .drag-hint { font-size: 8px; padding: 0 5px; }
+body[data-size="s"] #zChips .sz { display: none; }

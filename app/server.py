@@ -212,8 +212,20 @@ def api_donate(req):
 
 # --- settings, hotkey capture, overlay ----------------------------------------
 DEFAULT_SETTINGS = {"hotkey": "F8", "moveHotkey": "F9", "region": "medium",
-                    "overlay": {"stripX": None, "stripY": None, "visible": True, "locked": True}}
-STRIP_W, STRIP_H = 1000, 96  # compact strip for the 180 px black bars above/below a 2560x1080 game on a 1440p screen
+                    "overlay": {"stripX": None, "stripY": None, "visible": True, "locked": True, "size": "l"}}
+# Overlay sizes: l = strip for the 180 px black bars around a 2560x1080 game on a 1440p screen,
+# m and s = smaller windows with only the important bits, for screens without black bars.
+OVERLAY_SIZES = {"l": (1000, 96), "m": (600, 64), "s": (320, 46)}
+OVERLAY_RADIUS = {"l": 10, "m": 9, "s": 8}
+
+
+def overlay_size():
+    sz = load_settings()["overlay"].get("size", "l")
+    return sz if sz in OVERLAY_SIZES else "l"
+
+
+def strip_wh():
+    return OVERLAY_SIZES[overlay_size()]
 OVERLAY_TITLE = "AVA overlay"
 OVERLAY = {"seq": 0, "id": None, "score": 0, "text": "", "lines": [], "at": None, "error": None, "busy": False,
            "closesAt": None}
@@ -311,10 +323,11 @@ def on_move_hotkey():
 
 def default_strip_pos():
     """Centred in the black bar under a 1080-tall game (or near the bottom of the screen)."""
+    w, h = strip_wh()
     sw, sh = capture.primary_screen()
     bar = max(0, (sh - 1080) // 2)
-    x = max(0, (sw - STRIP_W) // 2)
-    y = sh - bar + (bar - STRIP_H) // 2 if bar >= STRIP_H else sh - STRIP_H - 60
+    x = max(0, (sw - w) // 2)
+    y = sh - bar + (bar - h) // 2 if bar >= h else sh - h - 60
     return x, y
 
 
@@ -327,8 +340,9 @@ def reset_overlay_position():
 
 def style_overlay():
     """Exact size, rounded corners, click-through when locked."""
-    capture.fix_window_size(OVERLAY_TITLE, STRIP_W, STRIP_H)
-    capture.round_corners(OVERLAY_TITLE, STRIP_W, STRIP_H, 10)
+    w, h = strip_wh()
+    capture.fix_window_size(OVERLAY_TITLE, w, h)
+    capture.round_corners(OVERLAY_TITLE, w, h, OVERLAY_RADIUS[overlay_size()])
     capture.set_click_through(OVERLAY_TITLE, load_settings()["overlay"].get("locked", True))
 
 
@@ -351,7 +365,30 @@ def show_overlay(visible):
 
 def api_overlay_state(req):
     return {**OVERLAY, "hotkeys": HOTKEY_STATUS, "overlay": _overlay_window is not None,
-            "locked": load_settings()["overlay"].get("locked", True)}
+            "locked": load_settings()["overlay"].get("locked", True), "size": overlay_size()}
+
+
+def set_overlay_size(size):
+    """Switch between big / medium / small, keeping the overlay centred on the same spot."""
+    if size not in OVERLAY_SIZES:
+        raise ApiError("Unknown overlay size")
+    old_w, old_h = strip_wh()
+    rect = capture.window_rect(OVERLAY_TITLE) if _overlay_window is not None else None
+    save_settings({"overlay": {"size": size}})
+    w, h = OVERLAY_SIZES[size]
+    if rect:
+        sw, sh = capture.primary_screen()
+        cx, cy = rect[0] + old_w // 2, rect[1] + old_h // 2
+        x, y = min(max(0, cx - w // 2), max(0, sw - w)), min(max(0, cy - h // 2), max(0, sh - h))
+        capture.move_window(OVERLAY_TITLE, x, y)
+        save_settings({"overlay": {"stripX": x, "stripY": y}})
+        style_overlay()
+    refresh_tray()
+
+
+def api_overlay_size(req):
+    set_overlay_size(str(req.body.get("size", "")))
+    return {"ok": True, "size": overlay_size()}
 
 
 def api_overlay_lock(req):
@@ -454,7 +491,7 @@ def create_overlay():
         x, y = default_strip_pos()
     try:
         _overlay_window = webview.create_window(
-            OVERLAY_TITLE, f"http://{HOST}:{PORT}/overlay.html", width=STRIP_W, height=STRIP_H,
+            OVERLAY_TITLE, f"http://{HOST}:{PORT}/overlay.html", width=strip_wh()[0], height=strip_wh()[1],
             x=int(x), y=int(y), resizable=False, frameless=True, easy_drag=False, shadow=False, min_size=(200, 40),
             on_top=True, background_color="#14110f", hidden=not st.get("visible", True))
     except Exception as e:  # noqa: BLE001
@@ -517,6 +554,11 @@ def start_tray():
                              checked=lambda item: not ov().get("locked", True), enabled=lambda item: _overlay_window is not None),
             pystray.MenuItem("Reset overlay position", lambda: reset_overlay_position(),
                              enabled=lambda item: _overlay_window is not None),
+            pystray.MenuItem("Overlay size", pystray.Menu(*[
+                pystray.MenuItem(label, (lambda k: lambda: set_overlay_size(k))(key), radio=True,
+                                 checked=(lambda k: lambda item: overlay_size() == k)(key))
+                for key, label in (("l", "Big"), ("m", "Medium"), ("s", "Small"))]),
+                enabled=lambda item: _overlay_window is not None),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quit", lambda: shutdown_app("quit from tray")),
         )
@@ -713,6 +755,7 @@ ROUTES = [
     ("GET", r"/api/overlay/state", api_overlay_state),
     ("POST", r"/api/overlay/lock", api_overlay_lock),
     ("POST", r"/api/overlay/reset", api_overlay_reset),
+    ("POST", r"/api/overlay/size", api_overlay_size),
     ("POST", r"/api/overlay/clear", api_overlay_clear),
     ("POST", r"/api/minimize", api_minimize),
     ("POST", r"/api/open-window", api_open_window),

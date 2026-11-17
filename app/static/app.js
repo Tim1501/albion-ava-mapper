@@ -98,6 +98,7 @@ async function renderSettings() {
     : `<span class="st ${ov.visible ? "ok" : ""}">${ov.visible ? "Visible" : "Hidden"}</span><span class="st ${ov.locked ? "" : "warn"}">${ov.locked ? "Locked · click-through" : "Unlocked · drag it"}</span>`;
   $("#ovDot").hidden = !(ov.visible && !ov.locked);
   $("#btnTray").disabled = !SETTINGS.trayAvailable;
+  document.querySelectorAll(".size-opt").forEach((o) => { o.classList.toggle("on", o.dataset.size === (ov.size || "l")); o.disabled = !SETTINGS.overlayAvailable; });
   if (!SETTINGS.overlayAvailable) $("#captureHint").textContent = "The overlay needs Microsoft Edge WebView2, which isn't available.";
 }
 
@@ -320,6 +321,14 @@ document.addEventListener("click", async (e) => {
     return;
   }
   if (t.dataset.show) { showInOverlay(t.dataset.show); return; }
+  if (t.dataset.size && t.classList.contains("size-opt")) {
+    try {
+      await api("POST", "/api/overlay/size", { size: t.dataset.size });
+      await renderSettings();
+      toast(`Overlay size: ${{ l: "Big", m: "Medium", s: "Small" }[t.dataset.size]}`);
+    } catch (err) { toast(err.message, true); }
+    return;
+  }
   if (t.dataset.save) {
     const id = t.dataset.save;
     saved.has(id) ? saved.delete(id) : saved.add(id);

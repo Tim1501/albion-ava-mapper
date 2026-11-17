@@ -348,11 +348,18 @@ def set_click_through(title, on, alpha=255):
         return False
     GWL_EXSTYLE = -20
     user32.GetWindowLongW.restype = ctypes.c_long
-    st = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
-    st |= 0x00080000 | 0x00000080 | 0x08000000          # LAYERED | TOOLWINDOW | NOACTIVATE
+    before = user32.GetWindowLongW(hwnd, GWL_EXSTYLE)
+    st = (before | 0x00080000 | 0x00000080 | 0x08000000) & ~0x00040000  # + LAYERED | TOOLWINDOW | NOACTIVATE, - APPWINDOW
     st = (st | 0x00000020) if on else (st & ~0x00000020)  # TRANSPARENT: clicks pass through
     user32.SetWindowLongW(hwnd, GWL_EXSTYLE, st)
     user32.SetLayeredWindowAttributes(hwnd, 0, int(alpha), 0x2)  # LWA_ALPHA
+    # The taskbar only re-checks TOOLWINDOW / APPWINDOW when a window is shown, so the overlay kept its
+    # taskbar button: hide and re-show it once (without taking focus) to drop the button.
+    # Async (posted, never waits): called from other threads, and a blocking call can deadlock the overlay's UI thread.
+    if (before ^ st) & (0x00000080 | 0x00040000) and user32.IsWindowVisible(hwnd):
+        user32.ShowWindowAsync(hwnd, 0)  # SW_HIDE
+        user32.ShowWindowAsync(hwnd, 4)  # SW_SHOWNOACTIVATE
+        user32.SetWindowPos(hwnd, ctypes.c_void_p(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x4000)  # HWND_TOPMOST, NOSIZE|NOMOVE|NOACTIVATE|ASYNCWINDOWPOS
     return True
 
 
