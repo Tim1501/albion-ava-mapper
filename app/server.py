@@ -51,6 +51,10 @@ DONORS_URL = "https://raw.githubusercontent.com/Tim1501/albion-ava-mapper/main/d
 # Newest first. Shown on the Overview page under "What's new"; app/release.py uses the entry
 # of the version it publishes as the GitHub release notes.
 CHANGELOG = [
+    ("1.0.2", "2026-11-17", [
+        "Purple accent colour, like my other apps",
+        "Closing the window (X) now quits the app completely; the tray button still keeps it running in the tray",
+    ]),
     ("1.0.1", "2026-11-17", [
         "New name: Albion Ava Mapper - by ChanaMasala (window, tray and shortcuts)",
         "Your old Start menu and desktop shortcuts are replaced with the new name",
@@ -864,9 +868,10 @@ def overlay_visible():
 
 
 def watch_window():
-    """Quit once the main window is closed, unless the overlay is still showing.
+    """Quit once the main window is closed (X), overlay and all.
 
-    The main window's page pings every 5 s; while it's open the pings keep coming.
+    Only the "minimize to tray" button keeps the app running without its window. The main window's
+    page pings every 5 s; while it's open the pings keep coming.
     """
     seen, missing = False, 0
     while True:
@@ -880,15 +885,15 @@ def watch_window():
             global _in_tray
             _in_tray = False
             continue
-        if overlay_visible() or _in_tray:
-            seen, missing = False, 0  # the overlay or the tray keeps the app running
+        if _in_tray:
+            seen, missing = False, 0  # minimized to the tray on purpose: keep running
             continue
         if seen:
             missing += 1
             if missing >= 3:
                 shutdown_app("window closed")
         now = time.time()
-        if _bye_at and now - _bye_at > 8 and (_last_ping or 0) < _bye_at:
+        if _bye_at and now - _bye_at > 3 and (_last_ping or 0) < _bye_at:
             shutdown_app("window said bye")
         if _last_ping and now - _last_ping > 90:
             shutdown_app("window stopped responding")

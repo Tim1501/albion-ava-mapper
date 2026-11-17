@@ -1,7 +1,7 @@
 /* Albion Ava Mapper (c) 2026 ChanaMasala. All rights reserved. Free for personal use only.
    Copying, redistributing, reusing in other projects, or using with AI to train on, copy or rebuild
    this code needs written permission from the creator (Discord: @ChanaMasala). See LICENSE. */
-/* Albion Gear Planner: flat dark UI modelled on kingshot.net (Space Grotesk + Inter), neutral ivory accent + role colours */
+/* Albion Ava Mapper: flat dark UI modelled on kingshot.net (Space Grotesk + Inter), purple accent like ROK Gem Notifier */
 @font-face { font-family: "Inter"; src: url("fonts/inter.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
 @font-face { font-family: "Space Grotesk"; src: url("fonts/space-grotesk.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
 
@@ -19,11 +19,11 @@
   --text-2: #d6d3d1;
   --muted: #a8a29e;
   --faint: #78716c;
-  --accent: #e8dfcf;
-  --accent-2: #f4eee3;
-  --accent-ink: #171412;
-  --accent-soft: rgba(232, 223, 207, .09);
-  --accent-line: rgba(232, 223, 207, .32);
+  --accent: #a970ff;
+  --accent-2: #b98aff;
+  --accent-ink: #12051f;
+  --accent-soft: rgba(169, 112, 255, .12);
+  --accent-line: rgba(169, 112, 255, .45);
   --r-tank: #60a5fa; --r-heal: #4ade80; --r-dps: #facc15; --r-support: #c084fc; --r-other: #a8a29e;
   --discord: #5865f2;
   --danger: #f87171;
@@ -68,7 +68,7 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .brand { display: flex; align-items: center; gap: 9px; color: var(--text); flex: none; }
 .brand img { border-radius: 5px; }
 .brand-text { font-family: var(--head); font-weight: 700; font-size: 16.5px; letter-spacing: -.02em; }
-.brand-accent { color: var(--accent); opacity: .75; }
+.brand-accent { color: var(--accent); }
 .brand-text { display: inline-grid; grid-template-columns: auto auto; column-gap: .28em; line-height: 1.1; }
 .brand-by { grid-column: 1 / -1; font: 600 10.5px var(--body); letter-spacing: .01em; color: var(--discord); opacity: .9; }
 .nav { display: flex; gap: 2px; height: 100%; }

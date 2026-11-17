@@ -84,8 +84,9 @@ Download the new zip and extract it over the old folder; your saved zones and se
 Both keys can be changed on the **Overlay** page. That page also has show/hide, reset
 position, a test read, and **What it read**: if a read misses, it shows exactly what the app saw.
 
-You can close the main window while you play; the app keeps running with the overlay.
-The **⤓** button minimizes it to the tray (the "show hidden icons" area by the clock).
+Closing the main window (**X**) quits the app, overlay included. To keep the overlay while you
+play without the main window, use the **⤓** button: it minimizes the app to the tray (the
+"show hidden icons" area by the clock). Click the tray icon to open the window again.
 
 **Safe to use:** the app only looks at the pixels around your mouse when you press F8, like a
 screenshot, and keeps that image in memory only. It never touches the game's memory, network
