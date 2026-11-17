@@ -41,7 +41,7 @@ except Exception:  # noqa: BLE001
 APP_NAME = "Albion Ava Mapper"                     # file names: the exe, bug reports
 APP_TITLE = "Albion Ava Mapper - by ChanaMasala"    # what people see: window, tray, shortcuts
 WINDOW_TITLE = APP_TITLE  # must match <title> in static/index.html
-APP_VERSION = "1.0.1"
+APP_VERSION = "1.0.2"
 DONATE_URL = "https://www.paypal.com/paypalme/DeepTak646"
 DISCORD_NAME = "ChanaMasala"
 REPO_URL = "https://github.com/Tim1501/albion-ava-mapper"
