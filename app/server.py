@@ -38,9 +38,10 @@ try:
 except Exception:  # noqa: BLE001
     webview = None
 
-APP_NAME = "Albion Ava Mapper"
-WINDOW_TITLE = "Albion Ava Mapper"  # must match <title> in static/index.html
-APP_VERSION = "1.0.0"
+APP_NAME = "Albion Ava Mapper"                     # file names: the exe, bug reports
+APP_TITLE = "Albion Ava Mapper - by ChanaMasala"    # what people see: window, tray, shortcuts
+WINDOW_TITLE = APP_TITLE  # must match <title> in static/index.html
+APP_VERSION = "1.0.1"
 DONATE_URL = "https://www.paypal.com/paypalme/DeepTak646"
 DISCORD_NAME = "ChanaMasala"
 REPO_URL = "https://github.com/Tim1501/albion-ava-mapper"
@@ -50,6 +51,10 @@ DONORS_URL = "https://raw.githubusercontent.com/Tim1501/albion-ava-mapper/main/d
 # Newest first. Shown on the Overview page under "What's new"; app/release.py uses the entry
 # of the version it publishes as the GitHub release notes.
 CHANGELOG = [
+    ("1.0.1", "2026-11-17", [
+        "New name: Albion Ava Mapper - by ChanaMasala (window, tray and shortcuts)",
+        "Your old Start menu and desktop shortcuts are replaced with the new name",
+    ]),
     ("1.0.0", "2026-11-17", [
         "First public release",
         "All 400 Roads of Avalon zones: chests (green, blue, gold, small and big), gathering spots, "
@@ -245,7 +250,7 @@ def system_info():
     sw, sh = capture.primary_screen()
     st = load_settings()
     lines = [
-        f"{APP_NAME} v{APP_VERSION}",
+        f"{APP_TITLE} v{APP_VERSION}",
         f"Made: {datetime.datetime.now():%Y-%m-%d %H:%M:%S} local, {datetime.datetime.now(datetime.timezone.utc):%H:%M} UTC",
         f"Windows: {platform.platform()}",
         f"Running as: {'release exe' if getattr(sys, 'frozen', False) else 'Python ' + platform.python_version()}",
@@ -311,7 +316,13 @@ def make_shortcuts(desktop=True):
     for folder in places:
         if not os.path.isdir(folder):
             continue
-        lnk = os.path.join(folder, APP_NAME + ".lnk")
+        lnk = os.path.join(folder, APP_TITLE + ".lnk")
+        old = os.path.join(folder, APP_NAME + ".lnk")  # name used by v1.0.0
+        if os.path.exists(old):
+            try:
+                os.remove(old)
+            except OSError:
+                pass
         ps = ("$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:AVA_LNK);"
               "$s.TargetPath=$env:AVA_EXE;$s.WorkingDirectory=$env:AVA_DIR;$s.IconLocation=$env:AVA_EXE+',0';"
               "$s.Description='Roads of Avalon zone finder';$s.Save()")
@@ -329,7 +340,9 @@ def startup_shortcuts():
     """First start: Start menu + desktop. Later starts: keep the Start menu one pointing here (folder moved)."""
     st = read_json(SETTINGS_FILE, {}) or {}
     first = not st.get("shortcutsMade")
-    res = make_shortcuts(desktop=first)
+    desk = desktop_dir()
+    renamed = bool(desk) and os.path.exists(os.path.join(desk, APP_NAME + ".lnk"))  # v1.0.0 desktop shortcut
+    res = make_shortcuts(desktop=first or renamed)
     if first and res.get("ok"):
         save_settings({"shortcutsMade": True})
         log("Made the Start menu and desktop shortcuts")
@@ -584,7 +597,7 @@ def api_minimize(req):
     _in_tray = True
     threading.Timer(0.3, close_main_windows).start()
     try:
-        _tray.notify("Albion Ava Mapper is still running. Click the tray icon to open it.", "Albion Ava Mapper")
+        _tray.notify("Albion Ava Mapper is still running. Click the tray icon to open it.", APP_TITLE)
     except Exception:  # noqa: BLE001
         pass
     return {"ok": True}
@@ -732,7 +745,7 @@ def start_tray():
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Quit", lambda: shutdown_app("quit from tray")),
         )
-        _tray = pystray.Icon("AlbionAvaMapper", icon, "Albion Ava Mapper", menu)
+        _tray = pystray.Icon("AlbionAvaMapper", icon, APP_TITLE, menu)
         threading.Thread(target=_tray.run, daemon=True).start()
     except Exception as e:  # noqa: BLE001
         log(f"Tray icon failed: {e}")

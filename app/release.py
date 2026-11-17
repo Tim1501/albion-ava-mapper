@@ -53,11 +53,11 @@ def notes_for(ver):
     return None
 
 
-READ_ME = r"""Albion Ava Mapper
-=================
+READ_ME = r"""Albion Ava Mapper - by ChanaMasala
+==================================
 
 Start it: double-click "Albion Ava Mapper.exe" in this folder.
-The first start also adds "Albion Ava Mapper" to your Start menu and your desktop.
+The first start also adds "Albion Ava Mapper - by ChanaMasala" to your Start menu and your desktop.
 
 Everything the app uses stays in this one folder:
   Albion Ava Mapper.exe   the app

@@ -48,7 +48,7 @@ Everything comes from Albion's own game files (via [ao-bin-dumps](https://github
    [latest release](https://github.com/Tim1501/albion-ava-mapper/releases/latest).
 2. Right-click the zip > **Extract All**, and put the folder anywhere (e.g. your Documents).
 3. Open the folder and double-click **Albion Ava Mapper.exe**. The first start also adds
-   **Albion Ava Mapper** to your Start menu and your desktop.
+   **Albion Ava Mapper - by ChanaMasala** to your Start menu and your desktop.
 
 Everything stays in that one folder: the app, and a `data` folder with your settings, saved
 zones and logs. To remove it, delete the folder and the two shortcuts. If you move the folder,

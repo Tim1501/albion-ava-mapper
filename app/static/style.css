@@ -69,6 +69,8 @@ svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round
 .brand img { border-radius: 5px; }
 .brand-text { font-family: var(--head); font-weight: 700; font-size: 16.5px; letter-spacing: -.02em; }
 .brand-accent { color: var(--accent); opacity: .75; }
+.brand-text { display: inline-grid; grid-template-columns: auto auto; column-gap: .28em; line-height: 1.1; }
+.brand-by { grid-column: 1 / -1; font: 600 10.5px var(--body); letter-spacing: .01em; color: var(--discord); opacity: .9; }
 .nav { display: flex; gap: 2px; height: 100%; }
 .nav button { display: inline-flex; align-items: center; gap: 7px; height: 100%; border: 0; background: none; color: var(--muted); font: 500 13.5px var(--body); padding: 0 12px; cursor: pointer; position: relative; }
 .nav button svg { width: 15px; height: 15px; }
