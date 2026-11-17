@@ -116,21 +116,10 @@ Chest colours follow the game's own chest names: plain = **green**, *Veteran* = 
 *Elite* = **gold**; *Small* / *Medium* = **small** / **big**. After an Albion patch, use
 **Data > Update zone data** in the app.
 
-## For me: adding a supporter
-
-Edit [donors.json](donors.json) and push it; every copy of the app picks it up the next time
-its Supporters page opens (no new release needed):
-
-```json
-{"currency": "$", "updated": "2026-11-20",
- "donors": [{"name": "Someone", "amount": 10, "message": "optional"}]}
-```
-
 ## Run from source (personal use)
 
 Install [Python 3.10+](https://www.python.org/downloads/) and double-click
-**Start from source.bat**. To build the release zip yourself:
-`pip install -r requirements.txt pyinstaller`, then `python app/release.py 1.0.0 --build`.
+**Start from source.bat**.
 
 ## Support
 
@@ -140,8 +129,7 @@ take a while, thank you for your patience.
 If the app helps you, please consider supporting it on PayPal:
 **[paypal.me/DeepTak646](https://www.paypal.com/paypalme/DeepTak646)** (or the **Donate**
 button in the app). Any amount is greatly appreciated. Supporters are listed on the app's
-**Supporters** page (from [donors.json](donors.json), updated by hand); write the name and
-message you'd like in the PayPal note.
+**Supporters** page; write the name and message you'd like in the PayPal note.
 
 Found a bug or have an idea? Use **Report a bug** in the app, or message me on Discord: **@ChanaMasala**.
 
