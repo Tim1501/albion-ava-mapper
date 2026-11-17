@@ -134,8 +134,8 @@
 .ov-hero { align-items: center; }
 .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
 .made-by { grid-template-columns: auto minmax(0, 1fr); gap: 16px; align-items: start; }
-.made-av { width: 46px; height: 46px; border-radius: 10px; display: grid; place-items: center; background: #f5c518; color: #0b0b0b;
-  font: 700 17px var(--head); letter-spacing: -.04em; border: 1px solid #f5c518; }
+.made-av { width: 46px; height: 46px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink);
+  font: 700 17px var(--head); letter-spacing: -.04em; border: 1px solid var(--accent); }
 .made-name { font: 600 16px var(--head); }
 .made-name .discord-name { font: inherit; }
 .made-by p, .sup-note p { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
