@@ -309,10 +309,18 @@ def api_bug_report(req):
 
 # --- shortcuts (release build) ------------------------------------------------------
 def make_shortcuts(desktop=True):
-    """Start menu shortcut (and a desktop one) for the release exe. PowerShell + WScript.Shell, no window."""
-    if not getattr(sys, "frozen", False):
-        return {"ok": False, "why": "Shortcuts are only made for the downloaded app (the .exe)."}
-    exe = os.path.abspath(sys.executable)
+    """Start menu shortcut (and a desktop one). PowerShell + WScript.Shell, no window.
+
+    Release build: points at the exe. From source: pythonw.exe running app\\server.py, with the app icon.
+    """
+    if getattr(sys, "frozen", False):
+        exe, args, icon = os.path.abspath(sys.executable), "", os.path.abspath(sys.executable) + ",0"
+        workdir = os.path.dirname(exe)
+    else:
+        py = os.path.dirname(os.path.abspath(sys.executable))
+        exe = os.path.join(py, "pythonw.exe") if os.path.exists(os.path.join(py, "pythonw.exe")) else sys.executable
+        here = os.path.dirname(os.path.abspath(__file__))
+        args, icon, workdir = f'"{os.path.join(here, "server.py")}"', os.path.join(here, "icon.ico") + ",0", ROOT_DIR
     places = [os.path.join(os.environ.get("APPDATA", ""), r"Microsoft\Windows\Start Menu\Programs")]
     if desktop and desktop_dir():
         places.append(desktop_dir())
@@ -328,9 +336,10 @@ def make_shortcuts(desktop=True):
             except OSError:
                 pass
         ps = ("$s=(New-Object -ComObject WScript.Shell).CreateShortcut($env:AVA_LNK);"
-              "$s.TargetPath=$env:AVA_EXE;$s.WorkingDirectory=$env:AVA_DIR;$s.IconLocation=$env:AVA_EXE+',0';"
+              "$s.TargetPath=$env:AVA_EXE;$s.Arguments=$env:AVA_ARGS;$s.WorkingDirectory=$env:AVA_DIR;"
+              "$s.IconLocation=$env:AVA_ICON;"
               "$s.Description='Roads of Avalon zone finder';$s.Save()")
-        env = {**os.environ, "AVA_LNK": lnk, "AVA_EXE": exe, "AVA_DIR": os.path.dirname(exe)}
+        env = {**os.environ, "AVA_LNK": lnk, "AVA_EXE": exe, "AVA_ARGS": args, "AVA_DIR": workdir, "AVA_ICON": icon}
         try:
             subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", ps], env=env,
                            timeout=20, creationflags=0x08000000, check=True)  # CREATE_NO_WINDOW
