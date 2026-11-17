@@ -1,0 +1,82 @@
+/* Albion Ava Mapper overlay: a compact 1000 x 96 strip for the black bar around a 2560x1080 game.
+   Styled after ROK Gem Notifier (tinted pills, bold timer with a bar, orange outline + "DRAG ME" while
+   unlocked), but toned down: softer colours and smaller type so it sits quietly in the bar. */
+:root {
+  --ov-line: #2a2623;
+  --ov-orange: #e39a42;
+  --ov-green: #6cc58c;
+  --ov-blue: #6ea8e0;
+  --ov-gold: #d9b85a;
+  --ov-red: #e2676a;
+  --ov-teal: #5bb8aa;
+  --ov-flash: #2e1918;
+  --ov-text: #e7e5e4;
+}
+html, body.ov { height: 100%; margin: 0; overflow: hidden; background: #12100e; }
+body.ov { display: block; min-height: 0; user-select: none; }
+
+.strip { position: relative; box-sizing: border-box; height: 100vh; width: 100vw; display: flex;
+  background: #12100e; border: 1px solid var(--ov-line); border-radius: 10px; padding: 10px 14px 10px 12px; overflow: hidden; }
+.strip.unlocked { border-color: var(--ov-orange); cursor: move; }
+.drag-hint { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); font: 700 9.5px var(--mono); letter-spacing: .08em;
+  color: var(--ov-orange); background: #261b10; border: 1px solid var(--ov-orange); border-top: 0; border-radius: 0 0 5px 5px; padding: 0 8px; display: none; }
+.strip.unlocked .drag-hint { display: block; }
+
+.main { flex: 1; min-width: 0; display: grid; grid-template-columns: 262px minmax(0, 1fr) 168px; }
+.main > section { min-width: 0; padding: 0 14px; border-left: 1px solid rgba(255, 255, 255, .07); }
+.main > section:first-child { padding-left: 0; border-left: 0; }
+.main > section:last-child { padding-right: 0; }
+
+/* zone */
+.c-zone { display: flex; align-items: center; gap: 11px; }
+.tierbadge { flex: none; width: 46px; height: 46px; border-radius: 9px; display: grid; place-items: center;
+  font: 700 17px var(--head); letter-spacing: -.02em; color: var(--faint); background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .1); }
+.tierbadge[data-t="4"] { color: #9cc3ea; border-color: rgba(156, 195, 234, .28); background: rgba(156, 195, 234, .06); }
+.tierbadge[data-t="6"] { color: #e8b48a; border-color: rgba(232, 180, 138, .28); background: rgba(232, 180, 138, .06); }
+.tierbadge[data-t="8"] { color: #e6d394; border-color: rgba(230, 211, 148, .28); background: rgba(230, 211, 148, .06); }
+.zinfo { min-width: 0; display: grid; gap: 2px; }
+.zname { font: 700 17px/1.2 var(--head); letter-spacing: -.015em; color: var(--ov-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.zname.muted { color: var(--muted); font-weight: 600; }
+.zsub { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; }
+.zsub b { color: var(--text-2); font-weight: 600; }
+.zsub .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--cc, var(--muted)); flex: none; opacity: .85; }
+.zsub .zid { font: 10.5px var(--mono); color: var(--faint); }
+.zread { font: 10.5px var(--mono); color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 14px; }
+.zread .ok { color: var(--ov-green); font-weight: 700; }
+.zread .warn { color: var(--ov-orange); font-weight: 700; }
+.zread .err { color: var(--ov-red); font-weight: 700; }
+
+/* contents */
+.c-loot { display: grid; align-content: center; gap: 4px; }
+.lrow { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 6px; height: 22px; }
+.lab { font: 700 9.5px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--faint); }
+.pills { display: flex; gap: 4px; flex-wrap: nowrap; min-width: 0; }
+.pill { --c: var(--muted); flex: none; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px; border-radius: 5px; font-size: 12px; font-weight: 600;
+  color: var(--c); background: color-mix(in srgb, var(--c) 9%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); white-space: nowrap; }
+.pill b { font: 700 12.5px var(--head); color: var(--ov-text); }
+.pill small { font-weight: 500; font-size: 11px; opacity: .8; }
+.pill.green { --c: var(--ov-green); } .pill.blue { --c: var(--ov-blue); } .pill.gold { --c: var(--ov-gold); }
+.pill.res { --c: #8f8983; color: var(--text-2); }
+.pill.res.big { --c: var(--ov-teal); color: var(--ov-text); }
+.pill.dng { --c: #b58ad8; }
+.pill img { width: 17px; height: 17px; margin-left: -3px; }
+.chest { width: 12px; height: 9px; border-radius: 2px 2px 1px 1px; background: var(--c); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .3); flex: none; opacity: .9; }
+.chest.big { width: 15px; height: 11px; }
+.none { font-size: 11.5px; color: var(--faint); }
+
+/* portal timer */
+.c-portal { display: grid; align-content: center; gap: 3px; border-radius: 7px; transition: background .2s; }
+.c-portal.flash { background: var(--ov-flash); }
+.plab { display: flex; align-items: center; justify-content: space-between; gap: 6px; font: 700 9.5px var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--faint); }
+.pstat { --c: var(--muted); font: 600 10px var(--body); letter-spacing: 0; text-transform: none; padding: 0 6px; border-radius: 4px; white-space: nowrap;
+  color: var(--c); background: color-mix(in srgb, var(--c) 9%, transparent); border: 1px solid color-mix(in srgb, var(--c) 30%, transparent); }
+.ptime { font: 700 26px/1.05 var(--head); letter-spacing: -.02em; color: var(--faint); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pbar { height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .07); overflow: hidden; }
+.pbar i { display: block; height: 100%; width: 0; border-radius: 4px; background: var(--muted); transition: width .9s linear; }
+.pat { font-size: 10.5px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c-portal[data-s="ok"] { --pc: var(--ov-green); }
+.c-portal[data-s="soon"] { --pc: var(--ov-orange); }
+.c-portal[data-s="last"], .c-portal[data-s="closed"] { --pc: var(--ov-red); }
+.c-portal[data-s] .ptime { color: var(--pc); }
+.c-portal[data-s] .pbar i { background: var(--pc); }
+.c-portal[data-s] .pstat { --c: var(--pc); }

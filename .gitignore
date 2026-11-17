@@ -1,0 +1,13 @@
+# what the app saves on your PC (settings, starred zones, icons, logs, zone data)
+data/
+
+# builds
+build/
+dist/
+*.zip
+__pycache__/
+*.spec
+
+# local only
+*.lnk
+.claude/

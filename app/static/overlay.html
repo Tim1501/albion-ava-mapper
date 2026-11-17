@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AVA overlay</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="overlay.css">
+</head>
+<body class="ov">
+<!-- Display only: a 1180 x 150 strip for the black bar above or below a 2560x1080 game.
+     All controls live in the main app and the tray icon; when locked, clicks pass straight through. -->
+<div class="strip" id="strip">
+  <div class="drag-hint">DRAG ME · <span id="hintKey">F9</span> LOCKS</div>
+  <div class="main">
+    <section class="c-zone">
+      <div class="tierbadge" id="tier">–</div>
+      <div class="zinfo">
+        <div class="zname muted" id="zName">No zone yet</div>
+        <div class="zsub" id="zSub">Hover a portal, press <b>F8</b></div>
+        <div class="zread" id="zRead"></div>
+      </div>
+    </section>
+    <section class="c-loot">
+      <div class="lrow"><span class="lab">Chests</span><div class="pills" id="pChests"></div></div>
+      <div class="lrow"><span class="lab">Gather</span><div class="pills" id="pGather"></div></div>
+      <div class="lrow"><span class="lab">Dungeons</span><div class="pills" id="pDung"></div></div>
+    </section>
+    <section class="c-portal" id="portal">
+      <div class="plab">Portal <span class="pstat" id="pStat">No timer</span></div>
+      <div class="ptime" id="pTime">--:--</div>
+      <div class="pbar"><i id="pBar"></i></div>
+      <div class="pat" id="pAt">read from the portal tooltip</div>
+    </section>
+  </div>
+</div>
+<script src="shared.js"></script>
+<script src="overlay.js"></script>
+</body>
+</html>
