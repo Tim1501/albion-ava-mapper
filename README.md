@@ -8,9 +8,23 @@
 
 <p align="center">
   <a href="https://github.com/Tim1501/albion-ava-mapper/releases/latest"><b>Download the latest version</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://youtu.be/2yMGWnGu_BQ"><b>Watch the video</b></a>
 </p>
 
 ![Albion Ava Mapper](docs/screenshot.png)
+
+## Video guide
+
+New here? This video explains what the app does and how to use it.
+Click the picture to watch it on YouTube.
+
+<p align="center">
+  <a href="https://youtu.be/2yMGWnGu_BQ">
+    <img src="https://img.youtube.com/vi/2yMGWnGu_BQ/maxresdefault.jpg" width="640"
+         alt="Albion Ava Mapper - video guide on YouTube">
+  </a>
+</p>
 
 ## What it does
 
