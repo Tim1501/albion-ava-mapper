@@ -8,6 +8,7 @@ network traffic or input.
 """
 import ctypes
 import difflib
+import os
 import re
 import threading
 from ctypes import wintypes
@@ -376,6 +377,69 @@ def show_window(title, visible):
         user32.SetWindowPos(hwnd, ctypes.c_void_p(-1), 0, 0, 0, 0, 0x0001 | 0x0002 | 0x0010 | 0x4000)  # TOPMOST, async
     else:
         user32.ShowWindowAsync(hwnd, 0)  # SW_HIDE
+    return True
+
+
+def work_area_for(rect):
+    """(left, top, right, bottom) of the work area (screen minus taskbar) of the monitor under rect."""
+    class MONITORINFO(ctypes.Structure):
+        _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT), ("rcWork", wintypes.RECT), ("dwFlags", wintypes.DWORD)]
+    r = wintypes.RECT(*[int(v) for v in rect])
+    user32.MonitorFromRect.restype = ctypes.c_void_p
+    mon = user32.MonitorFromRect(ctypes.byref(r), 2)  # MONITOR_DEFAULTTONEAREST
+    mi = MONITORINFO()
+    mi.cbSize = ctypes.sizeof(MONITORINFO)
+    user32.GetMonitorInfoW.argtypes = [ctypes.c_void_p, ctypes.POINTER(MONITORINFO)]
+    if mon and user32.GetMonitorInfoW(mon, ctypes.byref(mi)):
+        w = mi.rcWork
+        return w.left, w.top, w.right, w.bottom
+    sw, sh = primary_screen()
+    return 0, 0, sw, sh
+
+
+def set_window_rect(title, x, y, w, h):
+    """Move + resize in one go. Async: never waits for the window's own thread."""
+    hwnd = user32.FindWindowW(None, title)
+    if hwnd:
+        user32.SetWindowPos(hwnd, None, int(x), int(y), int(w), int(h), 0x0004 | 0x0010 | 0x4000)  # NOZORDER|NOACTIVATE|ASYNC
+    return bool(hwnd)
+
+
+def window_cmd(title, cmd):
+    """ShowWindowAsync: 0 hide, 5 show, 6 minimize, 9 restore. Bring it forward when showing."""
+    hwnd = user32.FindWindowW(None, title)
+    if not hwnd:
+        return False
+    user32.ShowWindowAsync(hwnd, int(cmd))
+    if cmd in (5, 9):
+        user32.SetForegroundWindow(hwnd)
+    return True
+
+
+def is_minimized(title):
+    hwnd = user32.FindWindowW(None, title)
+    return bool(hwnd) and bool(user32.IsIconic(hwnd))
+
+
+def style_main_window(title, icon_path=None):
+    """Windows 11 rounded corners + thin border colour, and our icon on the taskbar."""
+    hwnd = user32.FindWindowW(None, title)
+    if not hwnd:
+        return False
+    try:
+        dwm = ctypes.windll.dwmapi
+        pref = ctypes.c_int(2)  # DWMWCP_ROUND
+        dwm.DwmSetWindowAttribute(wintypes.HWND(hwnd), 33, ctypes.byref(pref), 4)
+        border = ctypes.c_uint(0x00252A2C)  # COLORREF 0x00BBGGRR: #2c2a25
+        dwm.DwmSetWindowAttribute(wintypes.HWND(hwnd), 34, ctypes.byref(border), 4)
+    except Exception:  # noqa: BLE001 - Windows 10 has no rounded corners: fine
+        pass
+    if icon_path and os.path.exists(icon_path):
+        user32.LoadImageW.restype = ctypes.c_void_p
+        for size, which in ((32, 1), (16, 0)):  # ICON_BIG, ICON_SMALL
+            h = user32.LoadImageW(None, icon_path, 1, size, size, 0x10)  # IMAGE_ICON, LR_LOADFROMFILE
+            if h:
+                user32.PostMessageW(wintypes.HWND(hwnd), 0x0080, which, ctypes.c_void_p(h))  # WM_SETICON
     return True
 
 

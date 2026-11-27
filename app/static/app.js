@@ -304,7 +304,7 @@ function goto(tab) {
   if (tab === "zones") setTimeout(() => $("#search").focus(), 30);
   if (tab === "overview") renderOverview();
   if (tab === "supporters") renderSupporters();
-  window.scrollTo(0, 0);
+  $("#page").scrollTo(0, 0);
 }
 
 // ------------------------------------------------------------------ jobs --
@@ -402,7 +402,7 @@ try { const v = localStorage.getItem("sortBy"); if (v && SORTS[v]) { sortBy = v;
 document.addEventListener("click", async (e) => {
   const t = e.target.closest("button, [data-goto]");
   if (!t) return;
-  if (t.dataset.goto) { e.preventDefault(); goto(t.dataset.goto); if (t.dataset.anchor) setTimeout(() => document.getElementById(t.dataset.anchor)?.scrollIntoView({ block: "start" }), 60); return; }
+  if (t.dataset.goto) { e.preventDefault(); goto(t.dataset.goto); if (t.dataset.anchor) setTimeout(() => document.getElementById(t.dataset.anchor)?.scrollIntoView({ block: "start", behavior: "smooth" }), 60); return; }
   if (t.dataset.tab) { goto(t.dataset.tab); return; }
   if (t.dataset.tier !== undefined) { filters.tier = Number(t.dataset.tier); shown = PAGE; renderFilters(); renderResults(); return; }
   if (t.dataset.conn !== undefined) { filters.conn = t.dataset.conn; shown = PAGE; renderFilters(); renderResults(); return; }
@@ -496,6 +496,9 @@ document.addEventListener("click", async (e) => {
       catch (err) { toast(err.message, true); }
       break;
     case "btnOpenData": api("POST", "/api/open-folder").catch((err) => toast(err.message, true)); break;
+    case "winMin": winOp("min"); break;
+    case "winMax": winOp("max"); break;
+    case "winClose":
     case "btnQuit":
       api("POST", "/api/shutdown").catch(() => {});
       document.body.innerHTML = '<div style="display:grid;place-items:center;height:100vh;color:#a8a29e;font:15px Inter">Albion Ava Mapper has stopped. You can close this window.</div>';
@@ -521,6 +524,62 @@ function tickClock() {
 }
 setInterval(tickClock, 1000);
 tickClock();
+
+// ------------------------------------------------- custom window chrome --
+// The main window is frameless (?chrome=1): our title bar moves it, its edges resize it, and its
+// buttons minimize / maximize / close it. The server does the actual moving with Windows calls.
+const CHROME = new URLSearchParams(location.search).has("chrome");
+document.body.classList.toggle("chrome", CHROME);
+async function winOp(op, extra = {}) {
+  try {
+    const r = await api("POST", "/api/win", { op, ...extra });
+    if (r && "max" in r) document.body.classList.toggle("maxed", !!r.max);
+    $("#winMax").title = document.body.classList.contains("maxed") ? "Restore" : "Maximize";
+    return r;
+  } catch (err) { if (op !== "drag") toast(err.message, true); }
+}
+if (CHROME) {
+  winOp("state");
+  // drag (title bar) and resize (edges): pointer moves are sent to the server, newest one only
+  let drag = null, busy = false, next = null;
+  const send = async () => {
+    if (busy || !next) return;
+    busy = true;
+    const body = next; next = null;
+    await winOp("drag", body);
+    busy = false;
+    send();
+  };
+  const startDrag = (e, edge) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const dpr = window.devicePixelRatio || 1;
+    drag = { edge, x: e.screenX, y: e.screenY, dpr, moved: false };
+    e.target.setPointerCapture(e.pointerId);
+    winOp("drag-start", { edge, cx: Math.round(e.screenX * dpr), cy: Math.round(e.screenY * dpr) });
+  };
+  const onMove = (e) => {
+    if (!drag) return;
+    const dx = Math.round((e.screenX - drag.x) * drag.dpr), dy = Math.round((e.screenY - drag.y) * drag.dpr);
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+    drag.moved = true;
+    next = { edge: drag.edge, dx, dy };
+    send();
+  };
+  const endDrag = () => { if (drag) { const moved = drag.moved; drag = null; if (moved) setTimeout(() => winOp("drag-end"), 120); } };
+  const bar = $("#titlebar");
+  bar.addEventListener("pointerdown", (e) => { if (!e.target.closest("button, a")) startDrag(e, ""); });
+  bar.addEventListener("pointermove", onMove);
+  bar.addEventListener("pointerup", endDrag);
+  bar.addEventListener("pointercancel", endDrag);
+  bar.addEventListener("dblclick", (e) => { if (!e.target.closest("button, a")) winOp("max"); });
+  $$(".rz").forEach((el) => {
+    el.addEventListener("pointerdown", (e) => startDrag(e, el.dataset.edge));
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+  });
+}
 
 // keep-alive so the server knows the window is open, and stops after it closes
 const ping = () => fetch("/api/ping", { cache: "no-store" }).catch(() => {});

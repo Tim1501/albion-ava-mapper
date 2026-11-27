@@ -51,6 +51,11 @@ DONORS_URL = "https://raw.githubusercontent.com/Tim1501/albion-ava-mapper/main/d
 # Newest first. Shown on the Overview page under "What's new"; app/release.py uses the entry
 # of the version it publishes as the GitHub release notes.
 CHANGELOG = [
+    ("1.0.3", "2026-11-27", [
+        "New window with its own title bar: game data, clocks, Donate, tray and the window buttons all in one bar",
+        "The window remembers its size and place, and maximizing keeps the taskbar visible",
+        "Starting the app again brings the open window forward instead of opening a second one",
+    ]),
     ("1.0.2", "2026-11-17", [
         "Purple accent colour, like my other apps",
         "Closing the window (X) now quits the app completely; the tray button still keeps it running in the tray",
@@ -403,7 +408,7 @@ def api_donate(req):
 
 
 # --- settings, hotkey capture, overlay ----------------------------------------
-DEFAULT_SETTINGS = {"hotkey": "F8", "moveHotkey": "F9", "region": "medium", "shortcutsMade": False,
+DEFAULT_SETTINGS = {"hotkey": "F8", "moveHotkey": "F9", "region": "medium", "shortcutsMade": False, "window": None,
                     "overlay": {"stripX": None, "stripY": None, "visible": True, "locked": True, "size": "l"}}
 # Overlay sizes: l = strip for the 180 px black bars around a 2560x1080 game on a 1440p screen,
 # m and s = smaller windows with only the important bits, for screens without black bars.
@@ -608,7 +613,10 @@ def api_minimize(req):
         raise ApiError("The tray icon is not available, so the app can't keep running in the background.")
     global _in_tray
     _in_tray = True
-    threading.Timer(0.3, close_main_windows).start()
+    if _main_window is not None:
+        threading.Timer(0.3, lambda: capture.window_cmd(WINDOW_TITLE, 0)).start()  # hide, keep running
+    else:
+        threading.Timer(0.3, close_main_windows).start()
     try:
         _tray.notify("Albion Ava Mapper is still running. Click the tray icon to open it.", APP_TITLE)
     except Exception:  # noqa: BLE001
@@ -771,8 +779,146 @@ def start_tray():
 WINDOW_PROFILE = (os.path.join(DATA_DIR, "browser") if getattr(sys, "frozen", False)
                   else os.path.join(os.environ.get("LOCALAPPDATA") or DATA_DIR, "AlbionAvaMapper", "window"))
 _window_proc = None
+_main_window = None  # frameless pywebview main window with our own title bar (None: Edge app window instead)
+MAIN = {"max": False, "normal": None, "drag": None}
+MAIN_MIN = (960, 600)
 _last_ping = None
 _bye_at = None
+
+
+def default_main_rect():
+    l, t, r, b = capture.work_area_for((0, 0, *capture.primary_screen()))
+    w, h = min(1360, r - l - 60), min(900, b - t - 40)
+    return l + (r - l - w) // 2, t + (b - t - h) // 2, w, h
+
+
+def saved_main_rect():
+    """Where the main window was last time, if it's still on a screen."""
+    st = read_json(SETTINGS_FILE, {}) or {}
+    win = st.get("window") or {}
+    try:
+        x, y, w, h = (int(win[k]) for k in ("x", "y", "w", "h"))
+    except (KeyError, TypeError, ValueError):
+        return default_main_rect(), False
+    l, t, r, b = capture.work_area_for((x, y, x + w, y + h))
+    if w < MAIN_MIN[0] or h < MAIN_MIN[1] or x + 80 > r or y + 20 > b or x + w - 80 < l or y < t - 10:
+        return default_main_rect(), bool(win.get("max"))
+    return (x, y, w, h), bool(win.get("max"))
+
+
+def save_main_rect():
+    rect = capture.window_rect(WINDOW_TITLE)
+    if not rect or capture.is_minimized(WINDOW_TITLE):
+        return
+    x, y, r, b = MAIN["normal"] if MAIN["max"] and MAIN["normal"] else rect
+    save_settings({"window": {"x": x, "y": y, "w": r - x, "h": b - y, "max": MAIN["max"]}})
+
+
+def maximize_main(on):
+    rect = capture.window_rect(WINDOW_TITLE)
+    if not rect or capture.is_minimized(WINDOW_TITLE):
+        return
+    if on and not MAIN["max"]:
+        MAIN["normal"] = rect
+        l, t, r, b = capture.work_area_for(rect)
+        capture.set_window_rect(WINDOW_TITLE, l, t, r - l, b - t)  # the work area: the taskbar stays visible
+        MAIN["max"] = True
+    elif not on and MAIN["max"]:
+        x, y, r, b = MAIN["normal"] or (*default_main_rect()[:2], 0, 0)
+        if r <= x:
+            x, y, w, h = default_main_rect()
+            r, b = x + w, y + h
+        capture.set_window_rect(WINDOW_TITLE, x, y, r - x, b - y)
+        MAIN["max"] = False
+
+
+def api_win(req):
+    """Title bar buttons and dragging of the frameless main window."""
+    op = req.body.get("op")
+    if op in ("max", "drag-start", "drag") and capture.is_minimized(WINDOW_TITLE):
+        if op == "max":
+            capture.window_cmd(WINDOW_TITLE, 9)  # minimized: just bring it back
+        return {"ok": True, "max": MAIN["max"]}
+    if op == "min":
+        capture.window_cmd(WINDOW_TITLE, 6)
+    elif op == "max":
+        maximize_main(not MAIN["max"])
+        threading.Timer(0.3, save_main_rect).start()
+    elif op == "drag-start":
+        rect = capture.window_rect(WINDOW_TITLE)
+        edge = str(req.body.get("edge") or "")
+        if rect and MAIN["max"] and not edge:
+            # dragging a maximized window: restore its size under the mouse, keeping the same grab point
+            nx, ny, nr, nb = MAIN["normal"] or (0, 0, *default_main_rect()[2:])
+            w, h = nr - nx, nb - ny
+            cx, cy = int(req.body.get("cx") or rect[0]), int(req.body.get("cy") or rect[1])
+            frac = (cx - rect[0]) / max(1, rect[2] - rect[0])
+            x, y = int(cx - w * frac), max(rect[1], cy - 18)
+            capture.set_window_rect(WINDOW_TITLE, x, y, w, h)
+            MAIN["max"] = False
+            rect = (x, y, x + w, y + h)
+        MAIN["drag"] = (rect, edge) if rect else None
+    elif op == "drag" and MAIN["drag"]:
+        (x, y, r, b), edge = MAIN["drag"]
+        dx, dy = int(req.body.get("dx") or 0), int(req.body.get("dy") or 0)
+        if not edge:
+            capture.set_window_rect(WINDOW_TITLE, x + dx, y + dy, r - x, b - y)
+        else:
+            if "w" in edge:
+                x = min(x + dx, r - MAIN_MIN[0])
+            if "e" in edge:
+                r = max(r + dx, x + MAIN_MIN[0])
+            if "n" in edge:
+                y = min(y + dy, b - MAIN_MIN[1])
+            if "s" in edge:
+                b = max(b + dy, y + MAIN_MIN[1])
+            capture.set_window_rect(WINDOW_TITLE, x, y, r - x, b - y)
+    elif op == "drag-end":
+        MAIN["drag"] = None
+        save_main_rect()
+    return {"ok": True, "max": MAIN["max"]}
+
+
+def create_main_window():
+    """The main window: frameless, with our own title bar (index.html?chrome=1)."""
+    global _main_window
+    if webview is None:
+        return False
+    (x, y, w, h), was_max = saved_main_rect()
+    try:
+        _main_window = webview.create_window(
+            WINDOW_TITLE, f"http://{HOST}:{PORT}/?chrome=1", width=w, height=h, x=x, y=y,
+            frameless=True, easy_drag=False, resizable=True, min_size=MAIN_MIN, background_color="#14110f")
+    except Exception as e:  # noqa: BLE001
+        log(f"Main window could not be created, using the browser window: {e}")
+        _main_window = None
+        return False
+
+    def shown():
+        capture.set_window_rect(WINDOW_TITLE, x, y, w, h)  # exact size (pywebview adds/subtracts a frame)
+        icon = None if getattr(sys, "frozen", False) else os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon.ico")
+        capture.style_main_window(WINDOW_TITLE, icon)
+        if was_max:
+            threading.Timer(0.2, lambda: maximize_main(True)).start()
+
+    def closing():  # Alt+F4 / taskbar "Close window": same as the X button, quit everything
+        if not _quitting:
+            threading.Thread(target=lambda: shutdown_app("window closed"), daemon=True).start()
+        return True
+
+    _main_window.events.shown += shown
+    _main_window.events.closing += closing
+    return True
+
+
+def show_main_window():
+    """Bring the main window back (from the tray, the taskbar, or a second start of the app)."""
+    global _in_tray
+    _in_tray = False
+    if _main_window is not None:
+        capture.window_cmd(WINDOW_TITLE, 9 if capture.is_minimized(WINDOW_TITLE) else 5)
+        return True
+    return False
 
 
 def find_app_browser():
@@ -910,6 +1056,8 @@ def watch_window():
 
 def api_open_window(req):
     """Open (another) main window, e.g. from the overlay."""
+    if show_main_window():
+        return {"ok": True}
     if app_windows():
         try:
             import ctypes
@@ -962,6 +1110,7 @@ ROUTES = [
     ("POST", r"/api/overlay/size", api_overlay_size),
     ("POST", r"/api/overlay/clear", api_overlay_clear),
     ("POST", r"/api/minimize", api_minimize),
+    ("POST", r"/api/win", api_win),
     ("POST", r"/api/open-window", api_open_window),
     ("POST", r"/api/overlay/show", api_overlay_show),
     ("POST", r"/api/overlay/hide", api_overlay_hide),
@@ -1080,9 +1229,18 @@ def main():
     capture.make_dpi_aware()
     url = f"http://{HOST}:{PORT}/"
     open_window = "--no-browser" not in sys.argv
+    try:  # our own taskbar button and icon, not Python's
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("ChanaMasala.AlbionAvaMapper")
+    except Exception:  # noqa: BLE001
+        pass
     if already_running():
-        if open_window:
-            open_app_window(url)
+        if open_window:  # bring the running copy's window forward instead of starting a second app
+            try:
+                urllib.request.urlopen(urllib.request.Request(url + "api/open-window", data=b"{}", method="POST",
+                                                              headers={"X-AVA-App": "1"}), timeout=3)
+            except Exception:  # noqa: BLE001
+                open_app_window(url)
         return
     server = None
     for port in range(PORT, PORT + 10):  # if the port is stuck (e.g. a copy that didn't exit), use the next one
@@ -1105,19 +1263,20 @@ def main():
     st = load_settings()
     _hotkey.set("read", st["hotkey"])
     _hotkey.set("move", st["moveHotkey"])
-    if open_window:
+    framed = open_window and create_main_window()
+    if open_window and not framed:  # no WebView2: the Edge app window, closed-window watching as before
         threading.Timer(0.3, lambda: open_app_window(url)).start()
-    threading.Thread(target=watch_window, daemon=True).start()
+        threading.Thread(target=watch_window, daemon=True).start()
     threading.Thread(target=check_update, daemon=True).start()
     threading.Thread(target=startup_shortcuts, daemon=True).start()
     start_tray()
     if "--no-overlay" not in sys.argv:
         create_overlay()
-    if _overlay_window is not None:
-        try:
-            webview.start()  # runs the overlay until the app quits
+    if _overlay_window is not None or _main_window is not None:
+        try:  # runs the main window and the overlay until the app quits
+            webview.start(private_mode=False, storage_path=WINDOW_PROFILE)
         except Exception as e:  # noqa: BLE001
-            log(f"Overlay stopped: {e}")
+            log(f"Windows stopped: {e}")
     while True:  # keep serving (also after the overlay, if it ever ends)
         time.sleep(3600)
 
